@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal GamEstudio | Tienda de Videojuegos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header>
+    <div class="header-container">
+      <h1>🎮 Portal GamEstudio</h1>
+      <div class="cart-btn" onclick="toggleCart()">
+        🛒 Cesta (<span id="cart-count">0</span>)
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- Buscador y Filtros -->
+    <section class="controls">
+      <input type="text" id="search-input" placeholder="🔍 Buscar juego o servicio..." onkeyup="filterProducts()">
+      <div class="categories">
+        <button class="cat-btn active" onclick="filterCategory('todos')">Todos</button>
+        <button class="cat-btn" onclick="filterCategory('ps5')">PS5</button>
+        <button class="cat-btn" onclick="filterCategory('ps4')">PS4</button>
+        <button class="cat-btn" onclick="filterCategory('pirateria_ps5')">Piratería PS5</button>
+        <button class="cat-btn" onclick="filterCategory('pirateria_ps4')">Piratería PS4</button>
+        <button class="cat-btn" onclick="filterCategory('perifericos')">Accesorios</button>
+      </div>
+    </section>
+
+    <!-- Catálogo de Productos -->
+    <section id="product-grid" class="product-grid">
+      <!-- Los productos se cargan dinámicamente con app.js -->
+    </section>
+  </main>
+
+  <!-- Modal del Carrito de Compras -->
+  <div id="cart-modal" class="cart-modal">
+    <div class="cart-content">
+      <h2>Tu Pedido</h2>
+      <ul id="cart-items"></ul>
+      <div class="cart-total">
+        <strong>Total: $<span id="cart-total-usd">0</span> USD</strong>
+      </div>
+      <div class="form-group">
+        <label>Tu Nombre:</label>
+        <input type="text" id="client-name" placeholder="Ej: Carlos">
+        <label>Dirección / Reparto (La Habana):</label>
+        <input type="text" id="client-address" placeholder="Ej: Marianao, La Habana">
+      </div>
+      <button class="btn-whatsapp" onclick="sendWhatsAppOrder()">📲 Enviar Pedido por WhatsApp</button>
+      <button class="btn-close" onclick="toggleCart()">Cerrar</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

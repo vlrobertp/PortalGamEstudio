@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "nombre": "EA Sports FC 26",
+    "categoria": "ps5",
+    "precio_usd": 12,
+    "imagen": "https://via.placeholder.com/300x200?text=FC+26",
+    "opciones": ["Permanente ($25)", "Perdible ($12)"]
+  },
+  {
+    "id": 2,
+    "nombre": "Piratería o Desbloqueo PS5 (v12.70 o inf)",
+    "categoria": "pirateria_ps5",
+    "precio_usd": 35,
+    "imagen": "https://via.placeholder.com/300x200?text=PS5+Hack",
+    "opciones": ["Paquete Básico ($35)", "Paquete Full ($50)"]
+  },
+  {
+    "id": 3,
+    "nombre": "P4Tool (Auto Hack 11.00)",
+    "categoria": "pirateria_ps4",
+    "precio_usd": 35,
+    "imagen": "https://via.placeholder.com/300x200?text=P4Tool",
+    "opciones": ["Estándar ($35)"]
+  },
+  {
+    "id": 4,
+    "nombre": "Black Myth: Wukong",
+    "categoria": "ps5",
+    "precio_usd": 15,
+    "imagen": "https://via.placeholder.com/300x200?text=Wukong",
+    "opciones": ["Permanente ($30)", "Perdible ($15)"]
+  },
+  {
+    "id": 5,
+    "nombre": "Funda de Silicona DualSense PS5",
+    "categoria": "perifericos",
+    "precio_usd": 15,
+    "imagen": "https://via.placeholder.com/300x200?text=Funda+PS5",
+    "opciones": ["Única ($15)"]
+  }
+]
