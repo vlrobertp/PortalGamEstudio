@@ -4,7 +4,7 @@
     "nombre": "EA Sports FC 26 (PS4 & PS5)",
     "categoria": "ps5",
     "precio_usd": 12,
-    "imagen": "https://via.placeholder.com/300x200?text=FC+26",
+    "imagen": "imagenes/EAFC26.webp",
     "opciones": ["Perdible ($12)", "Permanente ($25)"]
   },
   {
