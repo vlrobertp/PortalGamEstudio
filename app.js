@@ -1,5 +1,5 @@
 // CAMBIA ESTE NÚMERO POR TU WHATSAPP (Formato internacional sin el +)
-const TELEFONO_WHATSAPP = "5350000000"; 
+const TELEFONO_WHATSAPP = "5352890559"; 
 
 let productos = [];
 let carrito = [];
