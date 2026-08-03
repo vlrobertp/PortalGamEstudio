@@ -23,6 +23,10 @@
     {
       "id": "xboxone",
       "nombre": "Xbox One"
+    },
+    {
+      "id": "xboxseries",
+      "nombre": "Xbox Series"
     }
   ],
   "productos": [
