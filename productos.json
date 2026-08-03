@@ -31,6 +31,10 @@
     {
       "id": "xboxgamepass",
       "nombre": "XBOX GamePass"
+    },
+    {
+      "id": "serviciosxbox",
+      "nombre": "Servicios XBOX"
     }
   ],
   "productos": [
