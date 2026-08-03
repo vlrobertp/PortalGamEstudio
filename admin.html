@@ -60,7 +60,7 @@
     .table-products {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
+      margin-top: 10px;
     }
     .table-products th, .table-products td {
       border: 1px solid var(--border-color);
@@ -82,6 +82,29 @@
       font-weight: bold;
       display: inline-block;
       margin-bottom: 2px;
+    }
+    /* Estilos del buscador con Lupa */
+    .search-box-admin {
+      position: relative;
+      margin-top: 10px;
+    }
+    .search-box-admin input {
+      width: 100%;
+      padding: 10px 12px 10px 38px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-primary);
+      color: var(--text-main);
+      font-size: 0.9rem;
+    }
+    .search-box-admin .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      color: var(--text-muted);
+      pointer-events: none;
     }
   </style>
 </head>
@@ -182,10 +205,17 @@
         </form>
       </div>
 
-      <!-- Lista de Productos Existentes -->
+      <!-- Lista de Productos Existentes con Buscador -->
       <div>
         <h3>📋 Catálogo Actual</h3>
-        <div style="max-height: 500px; overflow-y: auto; margin-top: 15px;">
+
+        <!-- Buscador con Lupa -->
+        <div class="search-box-admin">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="admin-search-input" placeholder="Buscar por nombre o categoría..." oninput="filtrarTablaAdmin()">
+        </div>
+
+        <div style="max-height: 500px; overflow-y: auto; margin-top: 10px;">
           <table class="table-products">
             <thead>
               <tr>
