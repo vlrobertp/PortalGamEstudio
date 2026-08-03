@@ -150,16 +150,18 @@
     {
       "id": 5,
       "nombre": "Piratería o Desbloqueo PS5 (v12.70 o inf)",
-      "categoria": "pirateria_ps5",
+      "categorias": [
+        "serviciosplaystation"
+      ],
       "imagen": "imagenes/ps5_unlock.jpg",
       "opciones": [
         {
-          "nombre": "Paquete Básico",
-          "precio": 35
+          "nombre": "Paquete Básico 2 Juegos",
+          "precio": 30
         },
         {
-          "nombre": "Paquete Full",
-          "precio": 50
+          "nombre": "Paquete Full Lleno de juegos",
+          "precio": 45
         }
       ]
     },
