@@ -1,7 +1,7 @@
 // CONFIGURACIÓN PRINCIPAL DE PORTAL GAMESTUDIO
-const TELEFONO_WHATSAPP = "5352890559"; // Tu número de WhatsApp configurado
-const TARJETA_PAGO = "9205 9598 7962 9732"; // Tu tarjeta bancaria para transferencias
-const TASA_CAMBIO_DEFAULT = 675; // Tasa de cambio por defecto (modificable aquí fácilmente)
+const TELEFONO_WHATSAPP = "5352890559"; 
+const TARJETA_PAGO = "9205 9598 7962 9732"; 
+const TASA_CAMBIO_DEFAULT = 675; // TASA DE CAMBIO INTERNA (CUP x 1 USD)
 
 let productos = [];
 let carrito = [];
@@ -31,7 +31,7 @@ function renderProducts(lista) {
     const precioInicial = p.opciones[0].precio;
 
     card.innerHTML = `
-      <img src="${p.imagen}" alt="${p.nombre}" onerror="this.src='https://via.placeholder.com/300x200?text=Portal+GamEstudio'">
+      <img src="${p.imagen}" alt="${p.nombre}" onerror="this.onerror=null; this.src='https://via.placeholder.com/300x200?text=Portal+GamEstudio';">
       <h3>${p.nombre}</h3>
       <div class="option-select-container">
         <label>Modalidad:</label>
@@ -97,32 +97,21 @@ function updateCartUI() {
   calculateCUPTotal();
 }
 
-// Control visual del selector de Moneda/Tasa en el Modal
 function toggleExchangeRateInput() {
   const metodo = document.getElementById('payment-method').value;
-  const rateGroup = document.getElementById('exchange-rate-group');
   const cupBox = document.getElementById('cup-conversion-box');
-  const rateInput = document.getElementById('exchange-rate');
 
   if (metodo.includes('CUP')) {
-    rateGroup.style.display = 'block';
     cupBox.style.display = 'block';
-    if (!rateInput.value) {
-      rateInput.value = TASA_CAMBIO_DEFAULT;
-    }
     calculateCUPTotal();
   } else {
-    rateGroup.style.display = 'none';
     cupBox.style.display = 'none';
   }
 }
 
-// Recalcular monto en CUP según la tasa ingresada
 function calculateCUPTotal() {
   const totalUSD = parseFloat(document.getElementById('cart-total-usd').innerText) || 0;
-  const tasaInput = document.getElementById('exchange-rate').value;
-  const tasa = parseFloat(tasaInput) || TASA_CAMBIO_DEFAULT;
-  const totalCUP = totalUSD * tasa;
+  const totalCUP = totalUSD * TASA_CAMBIO_DEFAULT;
   
   document.getElementById('cart-total-cup').innerText = totalCUP.toLocaleString();
 }
@@ -150,7 +139,6 @@ function filterProducts() {
   renderProducts(filtrados);
 }
 
-// Generación y envío del pedido formateado a WhatsApp
 function sendWhatsAppOrder() {
   const nombre = document.getElementById('client-name').value;
   const telefono = document.getElementById('client-phone').value;
@@ -171,10 +159,8 @@ function sendWhatsAppOrder() {
   mensaje += `\n💰 *TOTAL EN USD:* $${totalUSD} USD`;
 
   if (metodoPago.includes('CUP')) {
-    const tasaInput = document.getElementById('exchange-rate').value;
-    const tasa = parseFloat(tasaInput) || TASA_CAMBIO_DEFAULT;
-    const totalCUP = totalUSD * tasa;
-    mensaje += `\n💵 *TOTAL A PAGAR (CUP):* ${totalCUP.toLocaleString()} CUP (Tasa: ${tasa})`;
+    const totalCUP = totalUSD * TASA_CAMBIO_DEFAULT;
+    mensaje += `\n💵 *TOTAL A PAGAR (CUP):* ${totalCUP.toLocaleString()} CUP`;
   }
 
   mensaje += `\n💳 *Método de Pago:* ${metodoPago}`;
