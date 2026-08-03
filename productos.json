@@ -35,6 +35,10 @@
     {
       "id": "serviciosxbox",
       "nombre": "Servicios XBOX"
+    },
+    {
+      "id": "serviciosplaystation",
+      "nombre": "Servicios Playstation"
     }
   ],
   "productos": [
