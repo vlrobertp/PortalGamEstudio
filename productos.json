@@ -1,10 +1,6 @@
 {
   "categorias": [
     {
-      "id": "ps5",
-      "nombre": "PS5"
-    },
-    {
       "id": "ps4",
       "nombre": "PS4"
     },
