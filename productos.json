@@ -120,6 +120,14 @@
         {
           "nombre": "Piratería PS4 ",
           "precio": 1
+        },
+        {
+          "nombre": "PS4 Inyección Perdible",
+          "precio": 5
+        },
+        {
+          "nombre": "PS4 Inyección Permanente",
+          "precio": 10
         }
       ]
     },
