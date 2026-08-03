@@ -23,6 +23,10 @@
     {
       "id": "perifericos",
       "nombre": "Accesorios / Discos"
+    },
+    {
+      "id": "ps5inyeccion",
+      "nombre": "PS5 Inyección"
     }
   ],
   "productos": [
