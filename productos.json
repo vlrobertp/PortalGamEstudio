@@ -85,30 +85,6 @@
       ]
     },
     {
-      "id": 2,
-      "nombre": "Black Myth: Wukong (PS5)",
-      "categoria": "ps5",
-      "imagen": "./imagenes/1785726443942_zkg_product_cover.webp",
-      "opciones": [
-        {
-          "nombre": "PS5 Perdible",
-          "precio": 25
-        },
-        {
-          "nombre": "PS5 Permanente",
-          "precio": 45
-        },
-        {
-          "nombre": "Xbox Perdible",
-          "precio": 20
-        },
-        {
-          "nombre": "Xbox Permanente",
-          "precio": 40
-        }
-      ]
-    },
-    {
       "id": 3,
       "nombre": "Grand Theft Auto V ",
       "categorias": [
