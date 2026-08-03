@@ -55,11 +55,13 @@ function renderProducts(lista) {
     card.className = 'product-card';
     
     let opcionesHTML = '';
-    p.opciones.forEach((opc, idx) => {
-      opcionesHTML += `<option value="${idx}">${opc.nombre} - $${opc.precio} USD</option>`;
-    });
+    if (p.opciones && p.opciones.length > 0) {
+      p.opciones.forEach((opc, idx) => {
+        opcionesHTML += `<option value="${idx}">${opc.nombre} - $${opc.precio} USD</option>`;
+      });
+    }
 
-    const precioInicial = p.opciones.length > 0 ? p.opciones[0].precio : 0;
+    const precioInicial = p.opciones && p.opciones.length > 0 ? p.opciones[0].precio : 0;
 
     card.innerHTML = `
       <img src="${p.imagen}" alt="${p.nombre}" onerror="this.onerror=null; this.src='https://via.placeholder.com/300x200?text=Portal+GamEstudio';">
@@ -185,16 +187,28 @@ function filterCategory(cat, element) {
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
   if (element) element.classList.add('active');
   
-  let filtrados = cat === 'todos' ? productos : productos.filter(p => p.categoria === cat);
+  let filtrados = cat === 'todos' 
+    ? productos 
+    : productos.filter(p => {
+        if (Array.isArray(p.categorias)) {
+          return p.categorias.includes(cat);
+        }
+        return p.categoria === cat;
+      });
+
   renderProducts(filtrados);
 }
 
 function filterProducts() {
   const text = document.getElementById('search-input').value.toLowerCase();
-  const filtrados = productos.filter(p => 
-    p.nombre.toLowerCase().includes(text) && 
-    (categoriaActual === 'todos' || p.categoria === categoriaActual)
-  );
+  const filtrados = productos.filter(p => {
+    const coincideNombre = p.nombre.toLowerCase().includes(text);
+    const perteneceCategoria = categoriaActual === 'todos' || (
+      Array.isArray(p.categorias) ? p.categorias.includes(categoriaActual) : p.categoria === categoriaActual
+    );
+    return coincideNombre && perteneceCategoria;
+  });
+
   renderProducts(filtrados);
 }
 
