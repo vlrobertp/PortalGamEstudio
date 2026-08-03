@@ -97,6 +97,18 @@ function updateCartUI() {
   calculateCUPTotal();
 }
 
+// Muestra u oculta el campo de dirección según el tipo de entrega
+function toggleDeliveryAddress() {
+  const deliveryType = document.getElementById('delivery-type').value;
+  const addressGroup = document.getElementById('address-group');
+  
+  if (deliveryType === 'Domicilio') {
+    addressGroup.style.display = 'block';
+  } else {
+    addressGroup.style.display = 'none';
+  }
+}
+
 function toggleExchangeRateInput() {
   const metodo = document.getElementById('payment-method').value;
   const cupBox = document.getElementById('cup-conversion-box');
@@ -142,11 +154,16 @@ function filterProducts() {
 function sendWhatsAppOrder() {
   const nombre = document.getElementById('client-name').value;
   const telefono = document.getElementById('client-phone').value;
+  const deliveryType = document.getElementById('delivery-type').value;
   const direccion = document.getElementById('client-address').value;
   const metodoPago = document.getElementById('payment-method').value;
 
   if (carrito.length === 0) return alert("Tu cesta está vacía");
   if (!nombre || !telefono) return alert("Por favor, completa tu nombre y teléfono de contacto.");
+  
+  if (deliveryType === 'Domicilio' && !direccion.trim()) {
+    return alert("Por favor, ingresa la dirección para la entrega a domicilio.");
+  }
 
   let mensaje = `🎮 *NUEVO PEDIDO - PORTAL GAMESTUDIO*\n\n`;
   let totalUSD = 0;
@@ -172,11 +189,10 @@ function sendWhatsAppOrder() {
   mensaje += `\n\n👤 *DATOS DEL CLIENTE:*`;
   mensaje += `\n▪️ Nombre: ${nombre}`;
   mensaje += `\n▪️ Teléfono: ${telefono}`;
+  mensaje += `\n🚚 *Tipo de Entrega:* ${deliveryType}`;
 
-  if (direccion.trim() !== '') {
-    mensaje += `\n📍 *Dirección de entrega:* ${direccion}`;
-  } else {
-    mensaje += `\n📍 *Entrega:* Digital / En tienda`;
+  if (deliveryType === 'Domicilio') {
+    mensaje += `\n📍 *Dirección:* ${direccion}`;
   }
 
   mensaje += `\n\n¿Me confirman la disponibilidad para procesar la orden?`;
