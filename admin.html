@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="styles.css">
   <style>
     .admin-container {
-      max-width: 900px;
+      max-width: 950px;
       margin: 30px auto;
       padding: 20px;
       background: var(--bg-card);
@@ -16,7 +16,7 @@
     }
     .config-box {
       background: var(--bg-primary);
-      padding: 15px;
+      padding: 18px;
       border-radius: 8px;
       margin-bottom: 25px;
       border: 1px solid var(--border-color);
@@ -98,16 +98,16 @@
     <div class="config-box">
       <h3>🔑 Configuración de Conexión a GitHub</h3>
       <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
-        Introduce tus datos para que el panel pueda subir imágenes y guardar los productos automáticamente.
+        Introduce tu usuario (sin @), nombre del repositorio y token para publicar cambios automáticamente.
       </p>
       <div class="admin-grid">
         <div class="form-row">
-          <label>Usuario de GitHub:</label>
-          <input type="text" id="gh-user" placeholder="Ej: TuUsuarioGitHub">
+          <label>Usuario de GitHub (sin @):</label>
+          <input type="text" id="gh-user" placeholder="Ej: vlrobertp">
         </div>
         <div class="form-row">
           <label>Nombre del Repositorio:</label>
-          <input type="text" id="gh-repo" placeholder="Ej: portal-gamestudio">
+          <input type="text" id="gh-repo" placeholder="Ej: PortalGamEstudio">
         </div>
       </div>
       <div class="form-row">
@@ -116,6 +116,24 @@
       </div>
       <button class="btn-small" style="background: var(--accent-color); color:#000; border:none; font-weight:bold;" onclick="guardarConfiguracion()">💾 Guardar Configuración Local</button>
       <span id="config-status" style="margin-left: 10px; font-size: 0.85rem;"></span>
+    </div>
+
+    <!-- Gestión de Categorías -->
+    <div class="config-box">
+      <h3>🏷️ Gestión de Categorías</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
+        Añade o elimina categorías para tu catálogo y menú de navegación.
+      </p>
+      
+      <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+        <input type="text" id="new-cat-id" placeholder="ID corto (ej: nintendo_switch)" style="flex: 1; min-width: 150px; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main);">
+        <input type="text" id="new-cat-name" placeholder="Nombre visible (ej: Nintendo Switch)" style="flex: 2; min-width: 200px; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-main);">
+        <button type="button" class="btn-small" style="background: var(--accent-color); color:#000; border:none; font-weight:bold;" onclick="agregarCategoria()">➕ Agregar Categoría</button>
+      </div>
+
+      <div id="categorias-tag-list" style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <!-- Se cargan dinámicamente -->
+      </div>
     </div>
 
     <!-- Gestión de Productos -->
@@ -135,13 +153,7 @@
           <div class="form-row">
             <label>Categoría:</label>
             <select id="prod-categoria">
-              <option value="ps5">PS5</option>
-              <option value="ps4">PS4</option>
-              <option value="xbox">Xbox</option>
-              <option value="pirateria_ps5">Piratería PS5</option>
-              <option value="pirateria_ps4">Piratería PS4</option>
-              <option value="perifericos">Accesorios / Discos</option>
-              <option value="servicios">Servicios Técnicos</option>
+              <!-- Se puebla dinámicamente -->
             </select>
           </div>
 
