@@ -4,21 +4,52 @@ const TARJETA_PAGO = "9205 9598 7962 9732";
 const TASA_CAMBIO_DEFAULT = 675; // TASA DE CAMBIO INTERNA (CUP x 1 USD)
 
 let productos = [];
+let categorias = [];
 let carrito = [];
 let categoriaActual = 'todos';
 
-// Cargar catálogo desde productos.json
+// Cargar catálogo y categorías desde productos.json
 fetch('productos.json')
   .then(res => res.json())
   .then(data => {
-    productos = data;
+    if (Array.isArray(data)) {
+      productos = data;
+    } else {
+      productos = data.productos || [];
+      if (data.categorias && data.categorias.length > 0) {
+        categorias = data.categorias;
+        renderCategoryButtons(categorias);
+      }
+    }
     renderProducts(productos);
+  })
+  .catch(err => console.error("Error al cargar productos.json:", err));
+
+// Renderizar botones de filtro por categoría dinámicamente
+function renderCategoryButtons(listaCategorias) {
+  const container = document.querySelector('.categories');
+  if (!container) return;
+
+  container.innerHTML = `<button class="cat-btn active" onclick="filterCategory('todos', this)">Todos</button>`;
+
+  listaCategorias.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn';
+    btn.innerText = cat.nombre;
+    btn.onclick = (e) => filterCategory(cat.id, e.target);
+    container.appendChild(btn);
   });
+}
 
 function renderProducts(lista) {
   const container = document.getElementById('product-grid');
   container.innerHTML = '';
   
+  if (lista.length === 0) {
+    container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No hay productos disponibles en esta categoría.</p>';
+    return;
+  }
+
   lista.forEach(p => {
     const card = document.createElement('div');
     card.className = 'product-card';
@@ -28,7 +59,7 @@ function renderProducts(lista) {
       opcionesHTML += `<option value="${idx}">${opc.nombre} - $${opc.precio} USD</option>`;
     });
 
-    const precioInicial = p.opciones[0].precio;
+    const precioInicial = p.opciones.length > 0 ? p.opciones[0].precio : 0;
 
     card.innerHTML = `
       <img src="${p.imagen}" alt="${p.nombre}" onerror="this.onerror=null; this.src='https://via.placeholder.com/300x200?text=Portal+GamEstudio';">
@@ -68,7 +99,6 @@ function addToCart(idProd) {
   carrito.push(itemCarrito);
   updateCartUI();
 
-  // Muestra el aviso indicando qué producto y modalidad se añadieron
   showToast(`¡<strong>${prod.nombre}</strong> (${opcionSeleccionada.nombre}) añadido a la cesta!`);
 }
 
@@ -100,7 +130,6 @@ function updateCartUI() {
   calculateCUPTotal();
 }
 
-// Función para mostrar notificaciones flotantes (toast)
 function showToast(mensaje) {
   const container = document.getElementById('toast-container');
   if (!container) return;
@@ -116,7 +145,6 @@ function showToast(mensaje) {
   }, 3000);
 }
 
-// Muestra u oculta el campo de dirección según el tipo de entrega
 function toggleDeliveryAddress() {
   const deliveryType = document.getElementById('delivery-type').value;
   const addressGroup = document.getElementById('address-group');
@@ -152,10 +180,10 @@ function toggleCart() {
   modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
 }
 
-function filterCategory(cat) {
+function filterCategory(cat, element) {
   categoriaActual = cat;
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  if (element) element.classList.add('active');
   
   let filtrados = cat === 'todos' ? productos : productos.filter(p => p.categoria === cat);
   renderProducts(filtrados);
