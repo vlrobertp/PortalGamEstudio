@@ -242,6 +242,38 @@
           "precio": 20
         }
       ]
+    },
+    {
+      "id": 10,
+      "nombre": "Black Myth: Wukong",
+      "categorias": [
+        "pirateria_ps5",
+        "ps5inyeccion",
+        "xboxseries"
+      ],
+      "imagen": "./imagenes/1785727999136_zkg_product_cover.webp",
+      "opciones": [
+        {
+          "nombre": "PS5 Permanente",
+          "precio": 45
+        },
+        {
+          "nombre": "PS5 Perdible",
+          "precio": 25
+        },
+        {
+          "nombre": "Xbox Perdible",
+          "precio": 20
+        },
+        {
+          "nombre": "Xbox Permanente",
+          "precio": 40
+        },
+        {
+          "nombre": "PS5 Piratería",
+          "precio": 3
+        }
+      ]
     }
   ]
 }
