@@ -23,10 +23,6 @@
     {
       "id": "perifericos",
       "nombre": "Accesorios / Discos"
-    },
-    {
-      "id": "servicios",
-      "nombre": "Servicios Técnicos"
     }
   ],
   "productos": [
