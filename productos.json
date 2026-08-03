@@ -19,6 +19,10 @@
     {
       "id": "ps5inyeccion",
       "nombre": "PS5 Inyección"
+    },
+    {
+      "id": "ps4inyeccion",
+      "nombre": "PS4 Inyección"
     }
   ],
   "productos": [
