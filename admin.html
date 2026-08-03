@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración | Portal GamEstudio</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .admin-container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+    .config-box {
+      background: var(--bg-primary);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      border: 1px solid var(--border-color);
+    }
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 768px) {
+      .admin-grid { grid-template-columns: 1fr; }
+    }
+    .form-row {
+      margin-bottom: 12px;
+    }
+    .form-row label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .form-row input, .form-row select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+    }
+    .opcion-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .table-products {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    .table-products th, .table-products td {
+      border: 1px solid var(--border-color);
+      padding: 10px;
+      text-align: left;
+    }
+    .table-products img {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    .badge {
+      background: var(--accent-color);
+      color: #000;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-container">
+      <h1>⚙️ Portal GamEstudio - Admin Panel</h1>
+      <a href="index.html" style="color: var(--accent-color); text-decoration: none; font-weight: bold;">← Ir a la Tienda</a>
+    </div>
+  </header>
+
+  <main class="admin-container">
+
+    <!-- Configuración GitHub -->
+    <div class="config-box">
+      <h3>🔑 Configuración de Conexión a GitHub</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">
+        Introduce tus datos para que el panel pueda subir imágenes y guardar los productos automáticamente.
+      </p>
+      <div class="admin-grid">
+        <div class="form-row">
+          <label>Usuario de GitHub:</label>
+          <input type="text" id="gh-user" placeholder="Ej: TuUsuarioGitHub">
+        </div>
+        <div class="form-row">
+          <label>Nombre del Repositorio:</label>
+          <input type="text" id="gh-repo" placeholder="Ej: portal-gamestudio">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Personal Access Token (PAT) de GitHub:</label>
+        <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxx">
+      </div>
+      <button class="btn-small" style="background: var(--accent-color); color:#000; border:none; font-weight:bold;" onclick="guardarConfiguracion()">💾 Guardar Configuración Local</button>
+      <span id="config-status" style="margin-left: 10px; font-size: 0.85rem;"></span>
+    </div>
+
+    <!-- Gestión de Productos -->
+    <div class="admin-grid">
+      
+      <!-- Formulario para Agregar / Editar -->
+      <div>
+        <h3 id="form-title">➕ Agregar Nuevo Producto</h3>
+        <form id="product-form" onsubmit="event.preventDefault(); guardarProducto();" style="margin-top: 15px;">
+          <input type="hidden" id="prod-id">
+
+          <div class="form-row">
+            <label>Nombre del Producto / Servicio:</label>
+            <input type="text" id="prod-nombre" required placeholder="Ej: Ghost of Tsushima">
+          </div>
+
+          <div class="form-row">
+            <label>Categoría:</label>
+            <select id="prod-categoria">
+              <option value="ps5">PS5</option>
+              <option value="ps4">PS4</option>
+              <option value="xbox">Xbox</option>
+              <option value="pirateria_ps5">Piratería PS5</option>
+              <option value="pirateria_ps4">Piratería PS4</option>
+              <option value="perifericos">Accesorios / Discos</option>
+              <option value="servicios">Servicios Técnicos</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label>Imagen del Producto:</label>
+            <input type="file" id="prod-file" accept="image/*">
+            <small style="color: var(--text-muted);">Formatos aceptados: .jpg, .png, .webp</small>
+          </div>
+
+          <!-- Modales y Precios -->
+          <div class="form-row">
+            <label>Opciones y Precios (USD):</label>
+            <div id="opciones-container">
+              <!-- Se cargan dinámicamente -->
+            </div>
+            <button type="button" class="btn-small" style="background: var(--border-color); color: #fff; border:none; margin-top:5px;" onclick="addOpcionRow()">+ Añadir Opciones/Precios</button>
+          </div>
+
+          <div style="margin-top: 20px; display: flex; gap: 10px;">
+            <button type="submit" id="btn-submit" class="btn-whatsapp" style="margin: 0;">🚀 Publicar en GitHub</button>
+            <button type="button" class="btn-close" style="width: auto;" onclick="resetForm()">Cancelar</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Lista de Productos Existentes -->
+      <div>
+        <h3>📋 Catálogo Actual</h3>
+        <div style="max-height: 500px; overflow-y: auto; margin-top: 15px;">
+          <table class="table-products">
+            <thead>
+              <tr>
+                <th>Foto</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="admin-product-list">
+              <!-- Carga dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Contenedor para notificaciones flotantes -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="admin.js"></script>
+</body>
+</html>
