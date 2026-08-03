@@ -64,8 +64,9 @@ function cargarProductosDesdeJSON() {
     .catch(err => console.error("Error al cargar productos.json:", err));
 }
 
-// 3. Renderizar Categorías en la Interfaz
+// 3. Renderizar Categorías en la Interfaz (Tags y Checkboxes)
 function renderCategoriasUI() {
+  // A. Tags de gestión arriba
   const tagContainer = document.getElementById('categorias-tag-list');
   if (tagContainer) {
     tagContainer.innerHTML = '';
@@ -80,14 +81,18 @@ function renderCategoriasUI() {
     });
   }
 
-  const selectCat = document.getElementById('prod-categoria');
-  if (selectCat) {
-    selectCat.innerHTML = '';
+  // B. Checkboxes de selección múltiple en el formulario
+  const checkContainer = document.getElementById('categories-checkbox-container');
+  if (checkContainer) {
+    checkContainer.innerHTML = '';
     categoriasAdmin.forEach(cat => {
-      const opt = document.createElement('option');
-      opt.value = cat.id;
-      opt.innerText = cat.nombre;
-      selectCat.appendChild(opt);
+      const label = document.createElement('label');
+      label.style.cssText = 'display: inline-flex; align-items: center; gap: 5px; font-size: 0.85rem; cursor: pointer; background: var(--bg-card); padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border-color);';
+      label.innerHTML = `
+        <input type="checkbox" name="prod-cat-check" value="${cat.id}">
+        ${cat.nombre}
+      `;
+      checkContainer.appendChild(label);
     });
   }
 }
@@ -139,17 +144,20 @@ async function eliminarCategoria(catId) {
   }
 }
 
-// 4. Render Tabla de Productos
+// 4. Render Tabla de Productos (Muestra Badges Múltiples)
 function renderAdminTable() {
   const tbody = document.getElementById('admin-product-list');
   tbody.innerHTML = '';
 
   productosAdmin.forEach(p => {
+    const catsArray = Array.isArray(p.categorias) ? p.categorias : [p.categoria || 'sin_categoria'];
+    const badgesHTML = catsArray.map(c => `<span class="badge">${c}</span>`).join(' ');
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><img src="${p.imagen}" onerror="this.src='https://via.placeholder.com/40';"></td>
       <td><strong>${p.nombre}</strong></td>
-      <td><span class="badge">${p.categoria}</span></td>
+      <td>${badgesHTML}</td>
       <td>
         <button class="btn-small" style="background:#ffb703; color:#000; border:none;" onclick="editarProducto(${p.id})">✏️</button>
         <button class="btn-small" style="background:#ff4757; color:#fff; border:none;" onclick="eliminarProducto(${p.id})">🗑️</button>
@@ -184,8 +192,16 @@ async function guardarProducto() {
 
   const idEdit = document.getElementById('prod-id').value;
   const nombre = document.getElementById('prod-nombre').value;
-  const categoria = document.getElementById('prod-categoria').value;
   const fileInput = document.getElementById('prod-file');
+
+  // Obtener array de categorías seleccionadas en los Checkboxes
+  const checkboxes = document.querySelectorAll('input[name="prod-cat-check"]:checked');
+  let categoriasSeleccionadas = Array.from(checkboxes).map(cb => cb.value);
+
+  if (categoriasSeleccionadas.length === 0) {
+    alert("Debes seleccionar al menos una categoría para el producto.");
+    return;
+  }
   
   const opcNombres = document.querySelectorAll('.opc-nombre');
   const opcPrecios = document.querySelectorAll('.opc-precio');
@@ -211,7 +227,7 @@ async function guardarProducto() {
       const fileName = `${Date.now()}_${cleanFileName}`;
       rutaImagen = `./imagenes/${fileName}`;
 
-      showToast("Subiendo imagen a la carpeta imagenes/...");
+      showToast("Subiendo imagen...");
       await uploadFileToGitHub(`imagenes/${fileName}`, file);
     } else if (idEdit) {
       const prodExistente = productosAdmin.find(p => p.id === parseInt(idEdit));
@@ -220,10 +236,22 @@ async function guardarProducto() {
 
     if (idEdit) {
       const idx = productosAdmin.findIndex(p => p.id === parseInt(idEdit));
-      productosAdmin[idx] = { id: parseInt(idEdit), nombre, categoria, imagen: rutaImagen, opciones };
+      productosAdmin[idx] = { 
+        id: parseInt(idEdit), 
+        nombre, 
+        categorias: categoriasSeleccionadas, 
+        imagen: rutaImagen, 
+        opciones 
+      };
     } else {
       const newId = productosAdmin.length > 0 ? Math.max(...productosAdmin.map(p => p.id)) + 1 : 1;
-      productosAdmin.push({ id: newId, nombre, categoria, imagen: rutaImagen, opciones });
+      productosAdmin.push({ 
+        id: newId, 
+        nombre, 
+        categorias: categoriasSeleccionadas, 
+        imagen: rutaImagen, 
+        opciones 
+      });
     }
 
     showToast("Actualizando productos.json en GitHub...");
@@ -241,7 +269,7 @@ async function guardarProducto() {
   }
 }
 
-// 6. Subida de Archivos e Interacción con API de GitHub
+// 6. Subida de Archivos y API GitHub
 async function uploadFileToGitHub(path, file) {
   const base64Content = await new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -336,8 +364,14 @@ function editarProducto(id) {
 
   document.getElementById('prod-id').value = p.id;
   document.getElementById('prod-nombre').value = p.nombre;
-  document.getElementById('prod-categoria').value = p.categoria;
   document.getElementById('form-title').innerText = "✏️ Editar Producto";
+
+  // Marcar Checkboxes asignados al producto
+  const catsArray = Array.isArray(p.categorias) ? p.categorias : [p.categoria];
+  const checkboxes = document.querySelectorAll('input[name="prod-cat-check"]');
+  checkboxes.forEach(cb => {
+    cb.checked = catsArray.includes(cb.value);
+  });
 
   const container = document.getElementById('opciones-container');
   container.innerHTML = '';
@@ -362,6 +396,10 @@ function resetForm() {
   document.getElementById('product-form').reset();
   document.getElementById('prod-id').value = '';
   document.getElementById('form-title').innerText = "➕ Agregar Nuevo Producto";
+  
+  // Desmarcar Checkboxes
+  document.querySelectorAll('input[name="prod-cat-check"]').forEach(cb => cb.checked = false);
+  
   document.getElementById('opciones-container').innerHTML = '';
   addOpcionRow("Permanente", 20);
 }
