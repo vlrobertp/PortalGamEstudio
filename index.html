@@ -54,7 +54,19 @@
       </div>
 
       <div class="form-group">
-        <label>Moneda y Método de Pago:</label>
+        <label>Tipo de Entrega:</label>
+        <select id="delivery-type" onchange="toggleDeliveryAddress()">
+          <option value="Tienda / Digital">En Tienda / Entrega Digital</option>
+          <option value="Domicilio">Envío a Domicilio</option>
+        </select>
+
+        <!-- Campo de Dirección (Solo visible si selecciona Domicilio) -->
+        <div id="address-group" style="display: none; margin-top: 10px;">
+          <label>Dirección de entrega (La Habana):</label>
+          <input type="text" id="client-address" placeholder="Ej: Calle 31 #4205 e/ 42 y 44, Marianao">
+        </div>
+
+        <label style="margin-top: 10px;">Moneda y Método de Pago:</label>
         <select id="payment-method" onchange="toggleExchangeRateInput()">
           <option value="USD - Efectivo">Efectivo en USD ($)</option>
           <option value="CUP - Transferencia">Transferencia en CUP (Transfermóvil / EnZona)</option>
@@ -66,9 +78,6 @@
         
         <label>Teléfono de contacto:</label>
         <input type="tel" id="client-phone" placeholder="Ej: 5351234567">
-        
-        <label>Dirección / Reparto (Opcional - Solo para domicilio):</label>
-        <input type="text" id="client-address" placeholder="Ej: Marianao, La Habana (dejar en blanco si es digital)">
       </div>
 
       <button class="btn-whatsapp" onclick="sendWhatsAppOrder()">📲 Enviar Pedido por WhatsApp</button>
