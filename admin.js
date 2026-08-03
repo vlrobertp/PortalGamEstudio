@@ -59,14 +59,13 @@ function cargarProductosDesdeJSON() {
         }
       }
       renderCategoriasUI();
-      renderAdminTable();
+      renderAdminTable(productosAdmin);
     })
     .catch(err => console.error("Error al cargar productos.json:", err));
 }
 
-// 3. Renderizar Categorías en la Interfaz (Tags y Checkboxes)
+// 3. Renderizar Categorías en la Interfaz
 function renderCategoriasUI() {
-  // A. Tags de gestión arriba
   const tagContainer = document.getElementById('categorias-tag-list');
   if (tagContainer) {
     tagContainer.innerHTML = '';
@@ -81,7 +80,6 @@ function renderCategoriasUI() {
     });
   }
 
-  // B. Checkboxes de selección múltiple en el formulario
   const checkContainer = document.getElementById('categories-checkbox-container');
   if (checkContainer) {
     checkContainer.innerHTML = '';
@@ -144,12 +142,17 @@ async function eliminarCategoria(catId) {
   }
 }
 
-// 4. Render Tabla de Productos (Muestra Badges Múltiples)
-function renderAdminTable() {
+// 4. Render Tabla de Productos y Búsqueda en Vivo
+function renderAdminTable(lista = productosAdmin) {
   const tbody = document.getElementById('admin-product-list');
   tbody.innerHTML = '';
 
-  productosAdmin.forEach(p => {
+  if (lista.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 15px;">No se encontraron productos.</td></tr>`;
+    return;
+  }
+
+  lista.forEach(p => {
     const catsArray = Array.isArray(p.categorias) ? p.categorias : [p.categoria || 'sin_categoria'];
     const badgesHTML = catsArray.map(c => `<span class="badge">${c}</span>`).join(' ');
 
@@ -165,6 +168,20 @@ function renderAdminTable() {
     `;
     tbody.appendChild(tr);
   });
+}
+
+function filtrarTablaAdmin() {
+  const query = document.getElementById('admin-search-input').value.toLowerCase().trim();
+  
+  const filtrados = productosAdmin.filter(p => {
+    const coincideNombre = p.nombre.toLowerCase().includes(query);
+    const catsArray = Array.isArray(p.categorias) ? p.categorias : [p.categoria || ''];
+    const coincideCategoria = catsArray.some(c => c.toLowerCase().includes(query));
+    
+    return coincideNombre || coincideCategoria;
+  });
+
+  renderAdminTable(filtrados);
 }
 
 function addOpcionRow(nombre = '', precio = '') {
@@ -194,7 +211,6 @@ async function guardarProducto() {
   const nombre = document.getElementById('prod-nombre').value;
   const fileInput = document.getElementById('prod-file');
 
-  // Obtener array de categorías seleccionadas en los Checkboxes
   const checkboxes = document.querySelectorAll('input[name="prod-cat-check"]:checked');
   let categoriasSeleccionadas = Array.from(checkboxes).map(cb => cb.value);
 
@@ -258,7 +274,7 @@ async function guardarProducto() {
     await updateJSONInGitHub({ categorias: categoriasAdmin, productos: productosAdmin });
 
     showToast("¡Publicación exitosa!");
-    renderAdminTable();
+    filtrarTablaAdmin();
     resetForm();
 
   } catch (err) {
@@ -329,7 +345,7 @@ async function updateJSONInGitHub(contentObject) {
   
   if (!getRes.ok) {
     const errData = await getRes.json();
-    throw new Error(`[HTTP ${getRes.status}] No se encontró productos.json: ${errData.message}`);
+    throw new Error(`[HTTP ${res.status}] No se encontró productos.json: ${errData.message}`);
   }
 
   const getData = await getRes.json();
@@ -366,7 +382,6 @@ function editarProducto(id) {
   document.getElementById('prod-nombre').value = p.nombre;
   document.getElementById('form-title').innerText = "✏️ Editar Producto";
 
-  // Marcar Checkboxes asignados al producto
   const catsArray = Array.isArray(p.categorias) ? p.categorias : [p.categoria];
   const checkboxes = document.querySelectorAll('input[name="prod-cat-check"]');
   checkboxes.forEach(cb => {
@@ -376,6 +391,8 @@ function editarProducto(id) {
   const container = document.getElementById('opciones-container');
   container.innerHTML = '';
   p.opciones.forEach(opc => addOpcionRow(opc.nombre, opc.precio));
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function eliminarProducto(id) {
@@ -385,7 +402,7 @@ async function eliminarProducto(id) {
   try {
     showToast("Guardando cambios en GitHub...");
     await updateJSONInGitHub({ categorias: categoriasAdmin, productos: productosAdmin });
-    renderAdminTable();
+    filtrarTablaAdmin();
     showToast("Producto eliminado correctamente.");
   } catch (e) {
     alert("Error al eliminar: " + e.message);
@@ -397,7 +414,6 @@ function resetForm() {
   document.getElementById('prod-id').value = '';
   document.getElementById('form-title').innerText = "➕ Agregar Nuevo Producto";
   
-  // Desmarcar Checkboxes
   document.querySelectorAll('input[name="prod-cat-check"]').forEach(cb => cb.checked = false);
   
   document.getElementById('opciones-container').innerHTML = '';
