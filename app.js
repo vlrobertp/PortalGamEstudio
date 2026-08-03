@@ -8,7 +8,7 @@ let categorias = [];
 let carrito = [];
 let categoriaActual = 'todos';
 
-// Función auxiliar para normalizar texto (elimina tildes y caracteres especiales)
+// Función para limpiar acentos y caracteres especiales
 function normalizarTexto(texto) {
   if (!texto) return '';
   return texto
@@ -21,7 +21,7 @@ function normalizarTexto(texto) {
 
 // Cargar catálogo, categorías y Cesta guardada al iniciar
 document.addEventListener('DOMContentLoaded', () => {
-  cargarCarritoGuardado(); // Persistencia: Restaurar cesta al recargar la página
+  cargarCarritoGuardado(); // Persistencia en localStorage
 
   fetch('productos.json')
     .then(res => res.json())
@@ -30,8 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
         productos = data;
       } else {
         productos = data.productos || [];
-        if (data.categorias && data.categorias.length > 0) {
-          categorias = data.categorias;
+        categorias = data.categorias || [];
+        if (categorias.length > 0) {
           renderCategoryButtons(categorias);
         }
       }
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(err => console.error("Error al cargar productos.json:", err));
 });
 
-// Renderizar botones de filtro por categoría dinámicamente
+// Renderizar botones de filtro por categoría
 function renderCategoryButtons(listaCategorias) {
   const container = document.querySelector('.categories');
   if (!container) return;
@@ -67,6 +67,11 @@ function renderProducts(lista) {
     return;
   }
 
+  // Obtener datos de la categoría activa
+  const catObj = categorias.find(c => c.id === categoriaActual);
+  const idCatNorm = normalizarTexto(categoriaActual);
+  const nombreCatNorm = catObj ? normalizarTexto(catObj.nombre) : '';
+
   lista.forEach(p => {
     const card = document.createElement('div');
     card.className = 'product-card';
@@ -74,21 +79,14 @@ function renderProducts(lista) {
     let selectedIndex = 0;
     let opcionesHTML = '';
 
-    // Buscar si alguna opción coincide con la categoría actualmente seleccionada
     if (p.opciones && p.opciones.length > 0) {
       if (categoriaActual !== 'todos') {
-        const catObj = categorias.find(c => c.id === categoriaActual);
-        
-        // Criterios de búsqueda normalizados
-        const catIdNorm = normalizarTexto(categoriaActual);
-        const catNombreNorm = catObj ? normalizarTexto(catObj.nombre) : '';
-
-        // Buscar coincidencia en TODAS las opciones del producto
+        // Buscar el índice de la opción que coincida con la categoría activa
         const indexCoincidente = p.opciones.findIndex(opc => {
           const opcNorm = normalizarTexto(opc.nombre);
           return (
-            (catNombreNorm && opcNorm.includes(catNombreNorm)) || 
-            (catIdNorm && opcNorm.includes(catIdNorm))
+            (idCatNorm && opcNorm.includes(idCatNorm)) ||
+            (nombreCatNorm && opcNorm.includes(nombreCatNorm))
           );
         });
 
@@ -97,7 +95,7 @@ function renderProducts(lista) {
         }
       }
 
-      // Generar desplegable seleccionando la opción alineada
+      // Renderizar el selector <select> estableciendo la opción seleccionada
       p.opciones.forEach((opc, idx) => {
         const isSelected = idx === selectedIndex ? 'selected' : '';
         opcionesHTML += `<option value="${idx}" ${isSelected}>${opc.nombre} - $${opc.precio} USD</option>`;
@@ -129,7 +127,7 @@ function updateCardPrice(idProd) {
   document.getElementById(`price-display-${idProd}`).innerText = `$${precioSel} USD`;
 }
 
-// --- PERSISTENCIA DE LA CESTA EN LOCALSTORAGE ---
+// --- PERSISTENCIA DE CESTA EN LOCALSTORAGE ---
 
 function cargarCarritoGuardado() {
   const guardado = localStorage.getItem('portal_carrito');
@@ -160,7 +158,7 @@ function addToCart(idProd) {
   };
 
   carrito.push(itemCarrito);
-  guardarCarrito(); // Guardar en el navegador
+  guardarCarrito();
   updateCartUI();
 
   showToast(`¡<strong>${prod.nombre}</strong> (${opcionSeleccionada.nombre}) añadido a la cesta!`);
@@ -168,7 +166,7 @@ function addToCart(idProd) {
 
 function removeFromCart(idCart) {
   carrito = carrito.filter(item => item.idCart !== idCart);
-  guardarCarrito(); // Guardar cambios tras eliminar
+  guardarCarrito();
   updateCartUI();
 }
 
