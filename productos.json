@@ -1,146 +1,94 @@
-[
-  {
-    "id": 1,
-    "nombre": "EA Sports FC 26 (PS4 & PS5)",
-    "categoria": "ps5",
-    "imagen": "imagenes/EAFC26.webp",
-    "opciones": [
-      {
-        "nombre": "Perdible",
-        "precio": 12
+{
+  "categorias": [
+    {
+      "id": "ps5",
+      "nombre": "PlayStation 5"
+    },
+    {
+      "id": "ps4",
+      "nombre": "PlayStation 4"
+    },
+    {
+      "id": "xbox",
+      "nombre": "Xbox Series / One"
+    },
+    {
+      "id": "servicios",
+      "nombre": "Servicios Técnicos & Desbloqueos"
+    }
+  ],
+  "productos": [
+    {
+      "id": "ps5-001",
+      "nombre": "Demon's Souls Remake",
+      "categoria": "ps5",
+      "descripcion": "Exclusivo de PS5. Gráficos de nueva generación y combate desafiante.",
+      "imagen": "img/ps5/demons_souls.jpg",
+      "modalidades": {
+        "permanente": 25.00,
+        "perdible": 15.00
       },
-      {
-        "nombre": "Permanente",
-        "precio": 25
-      }
-    ]
-  },
-  {
-    "id": 2,
-    "nombre": "Black Myth: Wukong (PS5)",
-    "categoria": "ps5",
-    "imagen": "imagenes/wukong.jpg",
-    "opciones": [
-      {
-        "nombre": "Perdible",
-        "precio": 15
+      "disponible": true,
+      "destacado": true
+    },
+    {
+      "id": "ps5-002",
+      "nombre": "EA Sports FC 26",
+      "categoria": "ps5",
+      "descripcion": "Edición estándar para PS5.",
+      "imagen": "img/ps5/eafc26.jpg",
+      "modalidades": {
+        "permanente": 35.00,
+        "perdible": 20.00
       },
-      {
-        "nombre": "Permanente",
-        "precio": 30
-      }
-    ]
-  },
-  {
-    "id": 3,
-    "nombre": "Grand Theft Auto V (PS4 & PS5)",
-    "categoria": "ps4",
-    "imagen": "imagenes/gtav.jpg",
-    "opciones": [
-      {
-        "nombre": "Perdible",
-        "precio": 10
+      "disponible": true,
+      "destacado": true
+    },
+    {
+      "id": "ps4-001",
+      "nombre": "God of War Ragnarök",
+      "categoria": "ps4",
+      "descripcion": "Aventura épica compatible con PS4 y desbloqueos BD-J.",
+      "imagen": "img/ps4/gow_ragnarok.jpg",
+      "modalidades": {
+        "permanente": 20.00,
+        "perdible": 12.00
       },
-      {
-        "nombre": "Permanente",
-        "precio": 20
-      }
-    ]
-  },
-  {
-    "id": 4,
-    "nombre": "EA Sports FC 26 + Gamepass (Xbox)",
-    "categoria": "xbox",
-    "imagen": "imagenes/fc26_xbox.jpg",
-    "opciones": [
-      {
-        "nombre": "Perdible",
-        "precio": 6
+      "disponible": true,
+      "destacado": false
+    },
+    {
+      "id": "xbox-001",
+      "nombre": "Forza Horizon 5",
+      "categoria": "xbox",
+      "descripcion": "Compatible con Xbox One y Xbox Series X/S.",
+      "imagen": "img/xbox/forza5.jpg",
+      "modalidades": {
+        "permanente": 18.00,
+        "perdible": 10.00
       },
-      {
-        "nombre": "Permanente + Gamepass",
-        "precio": 12
-      }
-    ]
-  },
-  {
-    "id": 5,
-    "nombre": "Piratería o Desbloqueo PS5 (v12.70 o inf)",
-    "categoria": "pirateria_ps5",
-    "imagen": "imagenes/ps5_unlock.jpg",
-    "opciones": [
-      {
-        "nombre": "Paquete Básico",
-        "precio": 35
-      },
-      {
-        "nombre": "Paquete Full",
-        "precio": 50
-      }
-    ]
-  },
-  {
-    "id": 6,
-    "nombre": "P4Tool (Auto Hack 11.00 PS4)",
-    "categoria": "pirateria_ps4",
-    "imagen": "imagenes/p4tool.jpg",
-    "opciones": [
-      {
-        "nombre": "Dispositivo Standard",
-        "precio": 35
-      }
-    ]
-  },
-  {
-    "id": 7,
-    "nombre": "Funda de Silicona DualSense PS5 + Grips",
-    "categoria": "perifericos",
-    "imagen": "imagenes/funda_ps5.jpg",
-    "opciones": [
-      {
-        "nombre": "Accesorio Único",
-        "precio": 15
-      }
-    ]
-  },
-  {
-    "id": 8,
-    "nombre": "007 First Light",
-    "categoria": "ps5",
-    "imagen": "./imagenes/1785725249117_images_-_2026-07-19t121412.207.jpeg",
-    "opciones": [
-      {
-        "nombre": "Permanente",
-        "precio": 45
-      },
-      {
-        "nombre": "Perdible",
-        "precio": 25
-      }
-    ]
-  },
-  {
-    "id": 9,
-    "nombre": "007 First Light",
-    "categoria": "ps5",
-    "imagen": "./imagenes/1785725339926_images_-_2026-07-19t121412.207.jpeg",
-    "opciones": [
-      {
-        "nombre": "PS5 Permanente",
-        "precio": 45
-      },
-      {
-        "nombre": "PS5 Perdible",
-        "precio": 25
-      },
-      {
-        "nombre": "Xbox Permanente",
-        "precio": 40
-      },
-      {
-        "nombre": "Xbox Perdible",
-        "precio": 20
-      }
-    ]
-  }
-]
+      "disponible": true,
+      "destacado": false
+    },
+    {
+      "id": "serv-001",
+      "nombre": "Desbloqueo PS5 (BD-J Autoloader / Payload)",
+      "categoria": "servicios",
+      "descripcion": "Configuración e instalación de autoloaders y payloads en firmwares compatibles.",
+      "imagen": "img/servicios/ps5_unlock.jpg",
+      "precio_unico": 15.00,
+      "disponible": true,
+      "destacado": true
+    },
+    {
+      "id": "serv-002",
+      "nombre": "Mantenimiento Preventivo & Pasta Térmica",
+      "categoria": "servicios",
+      "descripcion": "Limpieza profunda de consola y cambio de metal líquido o pasta térmica.",
+      "imagen": "img/servicios/mantenimiento.jpg",
+      "precio_unico": 20.00,
+      "disponible": true,
+      "destacado": false
+    }
+  ]
+}
