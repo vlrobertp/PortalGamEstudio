@@ -1,10 +1,6 @@
 {
   "categorias": [
     {
-      "id": "xbox",
-      "nombre": "Xbox"
-    },
-    {
       "id": "pirateria_ps5",
       "nombre": "Piratería PS5"
     },
