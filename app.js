@@ -8,22 +8,26 @@ let categorias = [];
 let carrito = [];
 let categoriaActual = 'todos';
 
-// Cargar catálogo y categorías desde productos.json
-fetch('productos.json')
-  .then(res => res.json())
-  .then(data => {
-    if (Array.isArray(data)) {
-      productos = data;
-    } else {
-      productos = data.productos || [];
-      if (data.categorias && data.categorias.length > 0) {
-        categorias = data.categorias;
-        renderCategoryButtons(categorias);
+// Cargar catálogo, categorías y Cesta guardada al iniciar
+document.addEventListener('DOMContentLoaded', () => {
+  cargarCarritoGuardado(); // Restaurar cesta al recargar la página
+
+  fetch('productos.json')
+    .then(res => res.json())
+    .then(data => {
+      if (Array.isArray(data)) {
+        productos = data;
+      } else {
+        productos = data.productos || [];
+        if (data.categorias && data.categorias.length > 0) {
+          categorias = data.categorias;
+          renderCategoryButtons(categorias);
+        }
       }
-    }
-    renderProducts(productos);
-  })
-  .catch(err => console.error("Error al cargar productos.json:", err));
+      renderProducts(productos);
+    })
+    .catch(err => console.error("Error al cargar productos.json:", err));
+});
 
 // Renderizar botones de filtro por categoría dinámicamente
 function renderCategoryButtons(listaCategorias) {
@@ -54,14 +58,34 @@ function renderProducts(lista) {
     const card = document.createElement('div');
     card.className = 'product-card';
     
+    let selectedIndex = 0;
     let opcionesHTML = '';
+
+    // Buscar si alguna opción coincide con la categoría actualmente seleccionada
     if (p.opciones && p.opciones.length > 0) {
+      if (categoriaActual !== 'todos') {
+        const catObj = categorias.find(c => c.id === categoriaActual);
+        const catNombre = catObj ? catObj.nombre.toLowerCase() : categoriaActual.toLowerCase();
+
+        // Intenta hacer coincidir el nombre de la modalidad con la categoría activa
+        const indexCoincidente = p.opciones.findIndex(opc => 
+          opc.nombre.toLowerCase().includes(catNombre) || 
+          opc.nombre.toLowerCase().includes(categoriaActual.toLowerCase())
+        );
+
+        if (indexCoincidente !== -1) {
+          selectedIndex = indexCoincidente;
+        }
+      }
+
+      // Generar opciones y marcar la opción correspondiente como 'selected'
       p.opciones.forEach((opc, idx) => {
-        opcionesHTML += `<option value="${idx}">${opc.nombre} - $${opc.precio} USD</option>`;
+        const isSelected = idx === selectedIndex ? 'selected' : '';
+        opcionesHTML += `<option value="${idx}" ${isSelected}>${opc.nombre} - $${opc.precio} USD</option>`;
       });
     }
 
-    const precioInicial = p.opciones && p.opciones.length > 0 ? p.opciones[0].precio : 0;
+    const precioInicial = p.opciones && p.opciones.length > 0 ? p.opciones[selectedIndex].precio : 0;
 
     card.innerHTML = `
       <img src="${p.imagen}" alt="${p.nombre}" onerror="this.onerror=null; this.src='https://via.placeholder.com/300x200?text=Portal+GamEstudio';">
@@ -86,6 +110,24 @@ function updateCardPrice(idProd) {
   document.getElementById(`price-display-${idProd}`).innerText = `$${precioSel} USD`;
 }
 
+// PERSISTENCIA: Cargar cesta guardada de localStorage
+function cargarCarritoGuardado() {
+  const guardado = localStorage.getItem('portal_carrito');
+  if (guardado) {
+    try {
+      carrito = JSON.parse(guardado);
+      updateCartUI();
+    } catch (e) {
+      carrito = [];
+    }
+  }
+}
+
+// PERSISTENCIA: Guardar cesta en localStorage
+function guardarCarrito() {
+  localStorage.setItem('portal_carrito', JSON.stringify(carrito));
+}
+
 function addToCart(idProd) {
   const prod = productos.find(p => p.id === idProd);
   const selectIndex = document.getElementById(`select-opc-${idProd}`).value;
@@ -99,6 +141,7 @@ function addToCart(idProd) {
   };
 
   carrito.push(itemCarrito);
+  guardarCarrito(); // Persistir en el navegador
   updateCartUI();
 
   showToast(`¡<strong>${prod.nombre}</strong> (${opcionSeleccionada.nombre}) añadido a la cesta!`);
@@ -106,12 +149,17 @@ function addToCart(idProd) {
 
 function removeFromCart(idCart) {
   carrito = carrito.filter(item => item.idCart !== idCart);
+  guardarCarrito(); // Persistir tras eliminar
   updateCartUI();
 }
 
 function updateCartUI() {
-  document.getElementById('cart-count').innerText = carrito.length;
+  const countEl = document.getElementById('cart-count');
+  if (countEl) countEl.innerText = carrito.length;
+
   const list = document.getElementById('cart-items');
+  if (!list) return;
+
   list.innerHTML = '';
   
   let totalUSD = 0;
@@ -128,7 +176,9 @@ function updateCartUI() {
     `;
   });
   
-  document.getElementById('cart-total-usd').innerText = totalUSD;
+  const totalUsdEl = document.getElementById('cart-total-usd');
+  if (totalUsdEl) totalUsdEl.innerText = totalUSD;
+  
   calculateCUPTotal();
 }
 
@@ -171,10 +221,12 @@ function toggleExchangeRateInput() {
 }
 
 function calculateCUPTotal() {
-  const totalUSD = parseFloat(document.getElementById('cart-total-usd').innerText) || 0;
+  const totalUsdEl = document.getElementById('cart-total-usd');
+  const totalUSD = totalUsdEl ? parseFloat(totalUsdEl.innerText) || 0 : 0;
   const totalCUP = totalUSD * TASA_CAMBIO_DEFAULT;
   
-  document.getElementById('cart-total-cup').innerText = totalCUP.toLocaleString();
+  const totalCupEl = document.getElementById('cart-total-cup');
+  if (totalCupEl) totalCupEl.innerText = totalCUP.toLocaleString();
 }
 
 function toggleCart() {
@@ -257,6 +309,11 @@ function sendWhatsAppOrder() {
   }
 
   mensaje += `\n\n¿Me confirman la disponibilidad para procesar la orden?`;
+
+  // Limpiar la cesta local tras enviar el pedido (opcional)
+  // carrito = [];
+  // guardarCarrito();
+  // updateCartUI();
 
   const url = `https://wa.me/${TELEFONO_WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
   window.open(url, '_blank');
