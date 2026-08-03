@@ -33,16 +33,42 @@
     {
       "id": 1,
       "nombre": "EA Sports FC 26 (PS4 & PS5)",
-      "categoria": "ps5",
-      "imagen": "./imagenes/1785726289770_fuh_product_cover.webp",
+      "categorias": [
+        "ps4",
+        "xbox",
+        "pirateria_ps5",
+        "pirateria_ps4",
+        "ps5inyeccion"
+      ],
+      "imagen": "./imagenes/1785727119800_fuh_product_cover.webp",
       "opciones": [
         {
-          "nombre": "Perdible",
+          "nombre": "PS5 Perdible",
           "precio": 12
         },
         {
-          "nombre": "Permanente",
+          "nombre": "PS5 Permanente",
           "precio": 25
+        },
+        {
+          "nombre": "Xbox Gamepass",
+          "precio": 0
+        },
+        {
+          "nombre": "PS4 Perdible",
+          "precio": 5
+        },
+        {
+          "nombre": "PS4 Permanente",
+          "precio": 10
+        },
+        {
+          "nombre": "Piratería PS4",
+          "precio": 1
+        },
+        {
+          "nombre": "Piratería PS5",
+          "precio": 3
         }
       ]
     },
