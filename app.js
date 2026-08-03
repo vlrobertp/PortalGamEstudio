@@ -67,6 +67,9 @@ function addToCart(idProd) {
 
   carrito.push(itemCarrito);
   updateCartUI();
+
+  // Muestra el aviso indicando qué producto y modalidad se añadieron
+  showToast(`¡<strong>${prod.nombre}</strong> (${opcionSeleccionada.nombre}) añadido a la cesta!`);
 }
 
 function removeFromCart(idCart) {
@@ -95,6 +98,22 @@ function updateCartUI() {
   
   document.getElementById('cart-total-usd').innerText = totalUSD;
   calculateCUPTotal();
+}
+
+// Función para mostrar notificaciones flotantes (toast)
+function showToast(mensaje) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `🛒 <span>${mensaje}</span>`;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
 }
 
 // Muestra u oculta el campo de dirección según el tipo de entrega
