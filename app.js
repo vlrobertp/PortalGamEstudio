@@ -1,6 +1,7 @@
 // CONFIGURACIÓN PRINCIPAL DE PORTAL GAMESTUDIO
-const TELEFONO_WHATSAPP = "5352890559"; // Reemplaza por tu número de WhatsApp real sin el +
+const TELEFONO_WHATSAPP = "5352890559"; // Tu número de WhatsApp configurado
 const TARJETA_PAGO = "9205 9598 7962 9732"; // Tu tarjeta bancaria para transferencias
+const TASA_CAMBIO_DEFAULT = 675; // Tasa de cambio por defecto (modificable aquí fácilmente)
 
 let productos = [];
 let carrito = [];
@@ -101,10 +102,14 @@ function toggleExchangeRateInput() {
   const metodo = document.getElementById('payment-method').value;
   const rateGroup = document.getElementById('exchange-rate-group');
   const cupBox = document.getElementById('cup-conversion-box');
+  const rateInput = document.getElementById('exchange-rate');
 
   if (metodo.includes('CUP')) {
     rateGroup.style.display = 'block';
     cupBox.style.display = 'block';
+    if (!rateInput.value) {
+      rateInput.value = TASA_CAMBIO_DEFAULT;
+    }
     calculateCUPTotal();
   } else {
     rateGroup.style.display = 'none';
@@ -115,7 +120,8 @@ function toggleExchangeRateInput() {
 // Recalcular monto en CUP según la tasa ingresada
 function calculateCUPTotal() {
   const totalUSD = parseFloat(document.getElementById('cart-total-usd').innerText) || 0;
-  const tasa = parseFloat(document.getElementById('exchange-rate').value) || 0;
+  const tasaInput = document.getElementById('exchange-rate').value;
+  const tasa = parseFloat(tasaInput) || TASA_CAMBIO_DEFAULT;
   const totalCUP = totalUSD * tasa;
   
   document.getElementById('cart-total-cup').innerText = totalCUP.toLocaleString();
@@ -152,7 +158,7 @@ function sendWhatsAppOrder() {
   const metodoPago = document.getElementById('payment-method').value;
 
   if (carrito.length === 0) return alert("Tu cesta está vacía");
-  if (!nombre || !telefono || !direccion) return alert("Por favor, completa tu nombre, teléfono y dirección.");
+  if (!nombre || !telefono) return alert("Por favor, completa tu nombre y teléfono de contacto.");
 
   let mensaje = `🎮 *NUEVO PEDIDO - PORTAL GAMESTUDIO*\n\n`;
   let totalUSD = 0;
@@ -165,7 +171,8 @@ function sendWhatsAppOrder() {
   mensaje += `\n💰 *TOTAL EN USD:* $${totalUSD} USD`;
 
   if (metodoPago.includes('CUP')) {
-    const tasa = parseFloat(document.getElementById('exchange-rate').value) || 0;
+    const tasaInput = document.getElementById('exchange-rate').value;
+    const tasa = parseFloat(tasaInput) || TASA_CAMBIO_DEFAULT;
     const totalCUP = totalUSD * tasa;
     mensaje += `\n💵 *TOTAL A PAGAR (CUP):* ${totalCUP.toLocaleString()} CUP (Tasa: ${tasa})`;
   }
@@ -179,7 +186,12 @@ function sendWhatsAppOrder() {
   mensaje += `\n\n👤 *DATOS DEL CLIENTE:*`;
   mensaje += `\n▪️ Nombre: ${nombre}`;
   mensaje += `\n▪️ Teléfono: ${telefono}`;
-  mensaje += `\n📍 *Dirección de entrega:* ${direccion}`;
+
+  if (direccion.trim() !== '') {
+    mensaje += `\n📍 *Dirección de entrega:* ${direccion}`;
+  } else {
+    mensaje += `\n📍 *Entrega:* Digital / En tienda`;
+  }
 
   mensaje += `\n\n¿Me confirman la disponibilidad para procesar la orden?`;
 
