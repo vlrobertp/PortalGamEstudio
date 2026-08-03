@@ -1,12 +1,12 @@
-// CONFIGURACIÓN DE TU TIENDA
+// CONFIGURACIÓN PRINCIPAL DE PORTAL GAMESTUDIO
 const TELEFONO_WHATSAPP = "5352890559"; // Reemplaza por tu número de WhatsApp real sin el +
-const TARJETA_PAGO = "9205 9598 7962 9732"; // Tu tarjeta bancaria
-const TASA_CAMBIO_CUP = 675; // Tasa de cambio aproximada para referencia en CUP
+const TARJETA_PAGO = "9205 9598 7962 9732"; // Tu tarjeta bancaria para transferencias
 
 let productos = [];
 let carrito = [];
 let categoriaActual = 'todos';
 
+// Cargar catálogo desde productos.json
 fetch('productos.json')
   .then(res => res.json())
   .then(data => {
@@ -22,7 +22,6 @@ function renderProducts(lista) {
     const card = document.createElement('div');
     card.className = 'product-card';
     
-    // Generar opciones dinámicas del selector
     let opcionesHTML = '';
     p.opciones.forEach((opc, idx) => {
       opcionesHTML += `<option value="${idx}">${opc.nombre} - $${opc.precio} USD</option>`;
@@ -58,9 +57,8 @@ function addToCart(idProd) {
   const selectIndex = document.getElementById(`select-opc-${idProd}`).value;
   const opcionSeleccionada = prod.opciones[selectIndex];
 
-  // Crear objeto único para la cesta
   const itemCarrito = {
-    idCart: Date.now() + Math.random(), // Identificador único para poder borrar
+    idCart: Date.now() + Math.random(),
     nombre: prod.nombre,
     modalidad: opcionSeleccionada.nombre,
     precio: opcionSeleccionada.precio
@@ -95,7 +93,32 @@ function updateCartUI() {
   });
   
   document.getElementById('cart-total-usd').innerText = totalUSD;
-  document.getElementById('cart-total-cup').innerText = (totalUSD * TASA_CAMBIO_CUP).toLocaleString();
+  calculateCUPTotal();
+}
+
+// Control visual del selector de Moneda/Tasa en el Modal
+function toggleExchangeRateInput() {
+  const metodo = document.getElementById('payment-method').value;
+  const rateGroup = document.getElementById('exchange-rate-group');
+  const cupBox = document.getElementById('cup-conversion-box');
+
+  if (metodo.includes('CUP')) {
+    rateGroup.style.display = 'block';
+    cupBox.style.display = 'block';
+    calculateCUPTotal();
+  } else {
+    rateGroup.style.display = 'none';
+    cupBox.style.display = 'none';
+  }
+}
+
+// Recalcular monto en CUP según la tasa ingresada
+function calculateCUPTotal() {
+  const totalUSD = parseFloat(document.getElementById('cart-total-usd').innerText) || 0;
+  const tasa = parseFloat(document.getElementById('exchange-rate').value) || 0;
+  const totalCUP = totalUSD * tasa;
+  
+  document.getElementById('cart-total-cup').innerText = totalCUP.toLocaleString();
 }
 
 function toggleCart() {
@@ -121,6 +144,7 @@ function filterProducts() {
   renderProducts(filtrados);
 }
 
+// Generación y envío del pedido formateado a WhatsApp
 function sendWhatsAppOrder() {
   const nombre = document.getElementById('client-name').value;
   const telefono = document.getElementById('client-phone').value;
@@ -138,21 +162,26 @@ function sendWhatsAppOrder() {
     totalUSD += item.precio;
   });
 
-  const totalCUP = totalUSD * TASA_CAMBIO_CUP;
+  mensaje += `\n💰 *TOTAL EN USD:* $${totalUSD} USD`;
 
-  mensaje += `\n💰 *TOTAL A PAGAR:* $${totalUSD} USD (o aprox. ${totalCUP.toLocaleString()} CUP)\n`;
-  mensaje += `💳 *Método de Pago:* ${metodoPago}\n`;
-
-  if (metodoPago.includes("Transferencia")) {
-    mensaje += `🏦 *Tarjeta para Transferencia:* \`${TARJETA_PAGO}\`\n`;
+  if (metodoPago.includes('CUP')) {
+    const tasa = parseFloat(document.getElementById('exchange-rate').value) || 0;
+    const totalCUP = totalUSD * tasa;
+    mensaje += `\n💵 *TOTAL A PAGAR (CUP):* ${totalCUP.toLocaleString()} CUP (Tasa: ${tasa})`;
   }
 
-  mensaje += `\n👤 *DATOS DEL CLIENTE:*`;
+  mensaje += `\n💳 *Método de Pago:* ${metodoPago}`;
+
+  if (metodoPago.includes("Transferencia")) {
+    mensaje += `\n🏦 *Tarjeta para Transferencia:* \`${TARJETA_PAGO}\``;
+  }
+
+  mensaje += `\n\n👤 *DATOS DEL CLIENTE:*`;
   mensaje += `\n▪️ Nombre: ${nombre}`;
   mensaje += `\n▪️ Teléfono: ${telefono}`;
   mensaje += `\n📍 *Dirección de entrega:* ${direccion}`;
 
-  mensaje += `\n\n¿Me confirman la disponibilidad para realizar la entrega/activación?`;
+  mensaje += `\n\n¿Me confirman la disponibilidad para procesar la orden?`;
 
   const url = `https://wa.me/${TELEFONO_WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
   window.open(url, '_blank');
