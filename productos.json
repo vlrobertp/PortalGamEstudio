@@ -3,88 +3,68 @@
     "id": 1,
     "nombre": "EA Sports FC 26 (PS4 & PS5)",
     "categoria": "ps5",
-    "precio_usd": 12,
-    "imagen": "imagenes/EAFC26.webp",
-    "opciones": ["Perdible ($12)", "Permanente ($25)"]
+    "imagen": "imagenes/fc26.jpg",
+    "opciones": [
+      { "nombre": "Perdible", "precio": 12 },
+      { "nombre": "Permanente", "precio": 25 }
+    ]
   },
   {
     "id": 2,
     "nombre": "Black Myth: Wukong (PS5)",
     "categoria": "ps5",
-    "precio_usd": 15,
-    "imagen": "https://via.placeholder.com/300x200?text=Wukong+PS5",
-    "opciones": ["Perdible ($15)", "Permanente ($30)"]
+    "imagen": "imagenes/wukong.jpg",
+    "opciones": [
+      { "nombre": "Perdible", "precio": 15 },
+      { "nombre": "Permanente", "precio": 30 }
+    ]
   },
   {
     "id": 3,
     "nombre": "Grand Theft Auto V (PS4 & PS5)",
     "categoria": "ps4",
-    "precio_usd": 10,
-    "imagen": "https://via.placeholder.com/300x200?text=GTA+V",
-    "opciones": ["Perdible ($10)", "Permanente ($20)"]
+    "imagen": "imagenes/gtav.jpg",
+    "opciones": [
+      { "nombre": "Perdible", "precio": 10 },
+      { "nombre": "Permanente", "precio": 20 }
+    ]
   },
   {
     "id": 4,
-    "nombre": "Minecraft (Inyección Permanente PS4 & PS5)",
-    "categoria": "ps4",
-    "precio_usd": 12,
-    "imagen": "https://via.placeholder.com/300x200?text=Minecraft",
-    "opciones": ["Inyección Permanente ($12)"]
+    "nombre": "EA Sports FC 26 + Gamepass (Xbox)",
+    "categoria": "xbox",
+    "imagen": "imagenes/fc26_xbox.jpg",
+    "opciones": [
+      { "nombre": "Perdible", "precio": 6 },
+      { "nombre": "Permanente + Gamepass", "precio": 12 }
+    ]
   },
   {
     "id": 5,
-    "nombre": "EA Sports FC 26 + Gamepass (Xbox One & Series)",
-    "categoria": "xbox",
-    "precio_usd": 12,
-    "imagen": "https://via.placeholder.com/300x200?text=FC+26+Xbox",
-    "opciones": ["Oferta Combo ($12)"]
+    "nombre": "Piratería o Desbloqueo PS5 (v12.70 o inf)",
+    "categoria": "pirateria_ps5",
+    "imagen": "imagenes/ps5_unlock.jpg",
+    "opciones": [
+      { "nombre": "Paquete Básico", "precio": 35 },
+      { "nombre": "Paquete Full", "precio": 50 }
+    ]
   },
   {
     "id": 6,
-    "nombre": "Piratería o Desbloqueo PS5 (v12.70 o inf)",
-    "categoria": "pirateria_ps5",
-    "precio_usd": 35,
-    "imagen": "https://via.placeholder.com/300x200?text=PS5+Unlock",
-    "opciones": ["Paquete Básico ($35)", "Paquete Full ($50)"]
+    "nombre": "P4Tool (Auto Hack 11.00 PS4)",
+    "categoria": "pirateria_ps4",
+    "imagen": "imagenes/p4tool.jpg",
+    "opciones": [
+      { "nombre": "Dispositivo Standard", "precio": 35 }
+    ]
   },
   {
     "id": 7,
-    "nombre": "P4Tool (Auto Hack 11.00 PS4)",
-    "categoria": "pirateria_ps4",
-    "precio_usd": 35,
-    "imagen": "https://via.placeholder.com/300x200?text=P4Tool+PS4",
-    "opciones": ["Dispositivo Plug & Play ($35)"]
-  },
-  {
-    "id": 8,
-    "nombre": "Actualización de Juego (previo Pago)",
-    "categoria": "servicios",
-    "precio_usd": 5,
-    "imagen": "https://via.placeholder.com/300x200?text=Update+Juego",
-    "opciones": ["Servicio ($5)"]
-  },
-  {
-    "id": 9,
-    "nombre": "Actualización de Sistema Consola",
-    "categoria": "servicios",
-    "precio_usd": 2,
-    "imagen": "https://via.placeholder.com/300x200?text=Update+FW",
-    "opciones": ["Servicio ($2)"]
-  },
-  {
-    "id": 10,
     "nombre": "Funda de Silicona DualSense PS5 + Grips",
     "categoria": "perifericos",
-    "precio_usd": 15,
-    "imagen": "https://via.placeholder.com/300x200?text=Funda+DualSense",
-    "opciones": ["Accesorio ($15)"]
-  },
-  {
-    "id": 11,
-    "nombre": "PS4 Slim + Mando (Consola)",
-    "categoria": "consolas",
-    "precio_usd": 250,
-    "imagen": "https://via.placeholder.com/300x200?text=PS4+Slim",
-    "opciones": ["Usado en Excelente Estado ($250)"]
+    "imagen": "imagenes/funda_ps5.jpg",
+    "opciones": [
+      { "nombre": "Accesorio Único", "precio": 15 }
+    ]
   }
 ]
