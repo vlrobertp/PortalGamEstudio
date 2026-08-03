@@ -35,7 +35,7 @@
 
     <!-- Catálogo de Productos -->
     <section id="product-grid" class="product-grid">
-      <!-- Los productos se cargan dinámicamente con app.js -->
+      <!-- Los productos se cargan dinámicamente -->
     </section>
   </main>
 
@@ -64,7 +64,7 @@
         <!-- Campo Dinámico para la Tasa de Cambio CUP -->
         <div id="exchange-rate-group" style="display: none; margin-top: 10px;">
           <label>Tasa de Cambio (CUP x 1 USD):</label>
-          <input type="number" id="exchange-rate" value="320" onchange="calculateCUPTotal()" onkeyup="calculateCUPTotal()">
+          <input type="number" id="exchange-rate" value="675" onchange="calculateCUPTotal()" onkeyup="calculateCUPTotal()">
         </div>
 
         <label style="margin-top: 10px;">Nombre completo:</label>
@@ -73,8 +73,8 @@
         <label>Teléfono de contacto:</label>
         <input type="tel" id="client-phone" placeholder="Ej: 5351234567">
         
-        <label>Dirección / Reparto (La Habana):</label>
-        <input type="text" id="client-address" placeholder="Ej: Marianao, La Habana">
+        <label>Dirección / Reparto (Opcional - Solo para domicilio):</label>
+        <input type="text" id="client-address" placeholder="Ej: Marianao, La Habana (dejar en blanco si es digital)">
       </div>
 
       <button class="btn-whatsapp" onclick="sendWhatsAppOrder()">📲 Enviar Pedido por WhatsApp</button>
