@@ -8,9 +8,20 @@ let categorias = [];
 let carrito = [];
 let categoriaActual = 'todos';
 
+// Función auxiliar para normalizar texto (elimina tildes y caracteres especiales)
+function normalizarTexto(texto) {
+  if (!texto) return '';
+  return texto
+    .toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
 // Cargar catálogo, categorías y Cesta guardada al iniciar
 document.addEventListener('DOMContentLoaded', () => {
-  cargarCarritoGuardado(); // Restaurar cesta al recargar la página
+  cargarCarritoGuardado(); // Persistencia: Restaurar cesta al recargar la página
 
   fetch('productos.json')
     .then(res => res.json())
@@ -47,6 +58,8 @@ function renderCategoryButtons(listaCategorias) {
 
 function renderProducts(lista) {
   const container = document.getElementById('product-grid');
+  if (!container) return;
+  
   container.innerHTML = '';
   
   if (lista.length === 0) {
@@ -65,20 +78,26 @@ function renderProducts(lista) {
     if (p.opciones && p.opciones.length > 0) {
       if (categoriaActual !== 'todos') {
         const catObj = categorias.find(c => c.id === categoriaActual);
-        const catNombre = catObj ? catObj.nombre.toLowerCase() : categoriaActual.toLowerCase();
+        
+        // Criterios de búsqueda normalizados
+        const catIdNorm = normalizarTexto(categoriaActual);
+        const catNombreNorm = catObj ? normalizarTexto(catObj.nombre) : '';
 
-        // Intenta hacer coincidir el nombre de la modalidad con la categoría activa
-        const indexCoincidente = p.opciones.findIndex(opc => 
-          opc.nombre.toLowerCase().includes(catNombre) || 
-          opc.nombre.toLowerCase().includes(categoriaActual.toLowerCase())
-        );
+        // Buscar coincidencia en TODAS las opciones del producto
+        const indexCoincidente = p.opciones.findIndex(opc => {
+          const opcNorm = normalizarTexto(opc.nombre);
+          return (
+            (catNombreNorm && opcNorm.includes(catNombreNorm)) || 
+            (catIdNorm && opcNorm.includes(catIdNorm))
+          );
+        });
 
         if (indexCoincidente !== -1) {
           selectedIndex = indexCoincidente;
         }
       }
 
-      // Generar opciones y marcar la opción correspondiente como 'selected'
+      // Generar desplegable seleccionando la opción alineada
       p.opciones.forEach((opc, idx) => {
         const isSelected = idx === selectedIndex ? 'selected' : '';
         opcionesHTML += `<option value="${idx}" ${isSelected}>${opc.nombre} - $${opc.precio} USD</option>`;
@@ -110,7 +129,8 @@ function updateCardPrice(idProd) {
   document.getElementById(`price-display-${idProd}`).innerText = `$${precioSel} USD`;
 }
 
-// PERSISTENCIA: Cargar cesta guardada de localStorage
+// --- PERSISTENCIA DE LA CESTA EN LOCALSTORAGE ---
+
 function cargarCarritoGuardado() {
   const guardado = localStorage.getItem('portal_carrito');
   if (guardado) {
@@ -123,7 +143,6 @@ function cargarCarritoGuardado() {
   }
 }
 
-// PERSISTENCIA: Guardar cesta en localStorage
 function guardarCarrito() {
   localStorage.setItem('portal_carrito', JSON.stringify(carrito));
 }
@@ -141,7 +160,7 @@ function addToCart(idProd) {
   };
 
   carrito.push(itemCarrito);
-  guardarCarrito(); // Persistir en el navegador
+  guardarCarrito(); // Guardar en el navegador
   updateCartUI();
 
   showToast(`¡<strong>${prod.nombre}</strong> (${opcionSeleccionada.nombre}) añadido a la cesta!`);
@@ -149,7 +168,7 @@ function addToCart(idProd) {
 
 function removeFromCart(idCart) {
   carrito = carrito.filter(item => item.idCart !== idCart);
-  guardarCarrito(); // Persistir tras eliminar
+  guardarCarrito(); // Guardar cambios tras eliminar
   updateCartUI();
 }
 
@@ -252,9 +271,9 @@ function filterCategory(cat, element) {
 }
 
 function filterProducts() {
-  const text = document.getElementById('search-input').value.toLowerCase();
+  const text = normalizarTexto(document.getElementById('search-input').value);
   const filtrados = productos.filter(p => {
-    const coincideNombre = p.nombre.toLowerCase().includes(text);
+    const coincideNombre = normalizarTexto(p.nombre).includes(text);
     const perteneceCategoria = categoriaActual === 'todos' || (
       Array.isArray(p.categorias) ? p.categorias.includes(categoriaActual) : p.categoria === categoriaActual
     );
@@ -309,11 +328,6 @@ function sendWhatsAppOrder() {
   }
 
   mensaje += `\n\n¿Me confirman la disponibilidad para procesar la orden?`;
-
-  // Limpiar la cesta local tras enviar el pedido (opcional)
-  // carrito = [];
-  // guardarCarrito();
-  // updateCartUI();
 
   const url = `https://wa.me/${TELEFONO_WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
   window.open(url, '_blank');
