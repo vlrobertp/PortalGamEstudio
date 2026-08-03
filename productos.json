@@ -50,15 +50,23 @@
       "id": 2,
       "nombre": "Black Myth: Wukong (PS5)",
       "categoria": "ps5",
-      "imagen": "imagenes/wukong.jpg",
+      "imagen": "./imagenes/1785726365844_zkg_product_cover.webp",
       "opciones": [
         {
-          "nombre": "Perdible",
-          "precio": 15
+          "nombre": "PS5 Perdible",
+          "precio": 25
         },
         {
-          "nombre": "Permanente",
-          "precio": 30
+          "nombre": "PS5 Permanente",
+          "precio": 45
+        },
+        {
+          "nombre": "Xbox Perdible",
+          "precio": 20
+        },
+        {
+          "nombre": "Xbox Permanente",
+          "precio": 40
         }
       ]
     },
