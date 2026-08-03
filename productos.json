@@ -3,7 +3,7 @@
     "id": 1,
     "nombre": "EA Sports FC 26 (PS4 & PS5)",
     "categoria": "ps5",
-    "imagen": "imagenes/fc26.jpg",
+    "imagen": "imagenes/EAFC26.webp",
     "opciones": [
       { "nombre": "Perdible", "precio": 12 },
       { "nombre": "Permanente", "precio": 25 }
