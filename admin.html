@@ -80,6 +80,8 @@
       border-radius: 10px;
       font-size: 0.75rem;
       font-weight: bold;
+      display: inline-block;
+      margin-bottom: 2px;
     }
   </style>
 </head>
@@ -150,11 +152,12 @@
             <input type="text" id="prod-nombre" required placeholder="Ej: Ghost of Tsushima">
           </div>
 
+          <!-- Selección Múltiple de Categorías -->
           <div class="form-row">
-            <label>Categoría:</label>
-            <select id="prod-categoria">
-              <!-- Se puebla dinámicamente -->
-            </select>
+            <label>Categorías (selecciona una o varias):</label>
+            <div id="categories-checkbox-container" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; max-height: 150px; overflow-y: auto;">
+              <!-- Se generan checkboxes dinámicamente -->
+            </div>
           </div>
 
           <div class="form-row">
@@ -188,7 +191,7 @@
               <tr>
                 <th>Foto</th>
                 <th>Nombre</th>
-                <th>Categoría</th>
+                <th>Categorías</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -203,7 +206,6 @@
 
   </main>
 
-  <!-- Contenedor para notificaciones flotantes -->
   <div id="toast-container" class="toast-container"></div>
 
   <script src="admin.js"></script>
