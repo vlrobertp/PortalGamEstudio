@@ -1,1 +1,21 @@
-[]
+[
+  {
+    "id": "PED-1785847694843",
+    "fecha": "2026-08-04T12:48:14.843Z",
+    "cliente": "Pedro",
+    "telefono": "53 52685959",
+    "entrega": "Tienda / Digital",
+    "direccion": "",
+    "metodoPago": "USD - Efectivo",
+    "totalUSD": 45,
+    "estado": "pendiente",
+    "items": [
+      {
+        "idCart": 1785847680937.3564,
+        "nombre": "MLB THE SHOW 26",
+        "modalidad": "PS5 Inyección Permanente",
+        "precio": 45
+      }
+    ]
+  }
+]
