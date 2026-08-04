@@ -221,6 +221,33 @@
           "precio": 3
         }
       ]
+    },
+    {
+      "id": 11,
+      "nombre": "MLB THE SHOW 26",
+      "categorias": [
+        "ps5inyeccion",
+        "xboxseries"
+      ],
+      "imagen": "./imagenes/1785846859701_images___2026_07_24t100841.793.jpeg",
+      "opciones": [
+        {
+          "nombre": "PS5 Inyección Perdible",
+          "precio": 25
+        },
+        {
+          "nombre": "PS5 Inyección Permanente",
+          "precio": 45
+        },
+        {
+          "nombre": "Xbox Series Perdible ",
+          "precio": 20
+        },
+        {
+          "nombre": "Xbox Series Permanente",
+          "precio": 40
+        }
+      ]
     }
   ]
 }
