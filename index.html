@@ -3,115 +3,113 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portal GamEstudio - Tienda Digital</title>
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    /* Estilos base para el modal de la cesta */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    .modal-content {
-      background: var(--bg-card, #1e1e2f);
-      padding: 20px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 500px;
-      max-height: 80vh;
-      overflow-y: auto;
-      border: 1px solid var(--border-color, #333);
-      position: relative;
-      color: var(--text-main, #fff);
-    }
-    .close-btn {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 1.5rem;
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: var(--text-muted, #aaa);
-    }
-  </style>
+  <title>Portal Gamestudio - Catálogo</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
+  <!-- HEADER -->
   <header>
-    <div class="header-container" style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px;">
-      <h1>🎮 Portal GamEstudio</h1>
-      <div style="display:flex; gap:15px; align-items:center;">
-        <a href="admin.html" style="color: var(--accent-color, #00ff88); text-decoration: none; font-weight: bold;">⚙️ Admin Panel</a>
-        <button type="button" onclick="abrirModalCarrito()" style="position:relative; background:none; border:none; font-size:1.5rem; cursor:pointer;">
-          🛒 <span id="cart-count" style="display:none; position:absolute; top:-5px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:0.75rem; font-weight:bold;">0</span>
+    <div class="header-container">
+      <div class="logo">
+        <span class="logo-icon">🎮</span> PORTAL <span>GAMESTUDIO</span>
+      </div>
+      <div class="header-actions">
+        <button class="cart-btn" onclick="toggleCart()">
+          🛒 Cesta <span id="cart-count">0</span>
         </button>
       </div>
     </div>
   </header>
 
-  <main style="max-width: 1100px; margin: 20px auto; padding: 0 15px;">
-    <!-- Buscador -->
-    <div style="margin-bottom: 20px;">
-      <input type="text" id="search-input" placeholder="🔍 Buscar juegos, servicios o productos..." oninput="filtrarProductos()" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color, #333); background: var(--bg-card, #1e1e2f); color: #fff;">
-    </div>
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="container">
+    
+    <!-- BARRA DE BÚSQUEDA Y FILTROS -->
+    <section class="controls">
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="Buscar juego o servicio..." oninput="filterProducts()">
+      </div>
+      <div class="categories">
+        <!-- Generado dinámicamente -->
+      </div>
+    </section>
 
-    <!-- Navegación por Categorías -->
-    <nav id="nav-categorias" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px;">
-      <!-- Se carga dinámicamente -->
-    </nav>
+    <!-- GRILLA DE PRODUCTOS -->
+    <section id="product-grid" class="grid">
+      <!-- Generado dinámicamente -->
+    </section>
 
-    <!-- Catálogo -->
-    <div id="grid-productos" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
-      <!-- Se carga dinámicamente -->
-    </div>
   </main>
 
-  <!-- Modal Cesta de Compras -->
-  <div id="cart-modal" class="modal">
+  <!-- MODAL / MODAL CESTA DE COMPRAS -->
+  <div id="cart-modal" class="modal-overlay">
     <div class="modal-content">
-      <button type="button" class="close-btn" onclick="cerrarModalCarrito()">×</button>
-      <h3>🛒 Tu Cesta de Compras</h3>
-      
-      <div id="cart-items-container" style="margin: 20px 0;">
-        <!-- Elementos del carrito -->
+      <div class="modal-header">
+        <h2>🛒 Tu Cesta de Compras</h2>
+        <button class="close-btn" onclick="toggleCart()">✕</button>
       </div>
 
-      <div style="border-top: 1px solid var(--border-color, #333); padding-top: 15px; margin-top: 15px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-          <span>Total en USD:</span>
-          <strong id="cart-total-usd">$0.00 USD</strong>
+      <div class="modal-body">
+        <ul id="cart-items" class="cart-list">
+          <!-- Elementos de la cesta -->
+        </ul>
+
+        <div class="cart-summary">
+          <p>Total USD: <strong>$<span id="cart-total-usd">0</span> USD</strong></p>
+          <div id="cup-conversion-box" class="conversion-box">
+            <p>Total en CUP: <strong><span id="cart-total-cup">0</span> CUP</strong></p>
+          </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-          <label for="cart-currency-select">Moneda de Pago:</label>
-          <select id="cart-currency-select" onchange="calcularTotalConvertido()" style="padding: 5px; border-radius: 4px; background: var(--bg-primary, #121212); color: #fff; border: 1px solid var(--border-color, #333);">
-            <option value="USD">USD ($)</option>
-            <option value="CUP">CUP (₱)</option>
-            <option value="MLC">MLC ($)</option>
-          </select>
-        </div>
+        <hr>
 
-        <div style="display: flex; justify-content: space-between; font-size: 1.1rem; color: var(--accent-color, #00ff88); font-weight: bold; margin-bottom: 20px;">
-          <span>Total Convertido:</span>
-          <span id="cart-total-convertido">0.00 USD</span>
-        </div>
+        <h3>📋 Datos del Pedido</h3>
+        <form id="order-form" onsubmit="event.preventDefault(); sendWhatsAppOrder();">
+          <div class="form-group">
+            <label for="client-name">Nombre completo *</label>
+            <input type="text" id="client-name" required placeholder="Tu nombre">
+          </div>
 
-        <button type="button" class="btn-whatsapp" onclick="enviarPedidoWhatsApp(event)" style="width: 100%; padding: 12px; background: #25D366; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem;">
-          📲 Enviar Pedido por WhatsApp
-        </button>
+          <div class="form-group">
+            <label for="client-phone">Teléfono de contacto *</label>
+            <input type="tel" id="client-phone" required placeholder="Ej. 52890559">
+          </div>
+
+          <div class="form-group">
+            <label for="delivery-type">Tipo de entrega</label>
+            <select id="delivery-type" onchange="toggleDeliveryAddress()">
+              <option value="Digital / Remoto">Digital / En tienda</option>
+              <option value="Domicilio">Entrega a domicilio</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="address-group" style="display: none;">
+            <label for="client-address">Dirección exacta</label>
+            <textarea id="client-address" rows="2" placeholder="Dirección para la entrega"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="payment-method">Método de pago</label>
+            <select id="payment-method" onchange="toggleExchangeRateInput()">
+              <option value="Efectivo USD">Efectivo USD</option>
+              <option value="Transferencia CUP">Transferencia CUP</option>
+              <option value="Efectivo CUP">Efectivo CUP</option>
+              <option value="USD Digital">USD Digital (MLC / Zelle)</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-checkout">📱 Confirmar por WhatsApp</button>
+        </form>
       </div>
     </div>
   </div>
 
-  <div id="toast-container" class="toast-container"></div>
+  <!-- NOTIFICACIONES TOAST -->
+  <div id="toast-container"></div>
 
   <script src="app.js"></script>
 </body>
