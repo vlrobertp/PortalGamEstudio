@@ -287,7 +287,7 @@ function filterProducts() {
   renderProducts(filtrados);
 }
 
-function guardarPedidoEnHistorial(nuevoPedido) {
+function guardarPedidoEnHistorialLocal(nuevoPedido) {
   let pedidos = JSON.parse(localStorage.getItem('portal_pedidos') || '[]');
   pedidos.unshift(nuevoPedido);
   localStorage.setItem('portal_pedidos', JSON.stringify(pedidos));
@@ -351,7 +351,8 @@ function sendWhatsAppOrder() {
     estado: 'pendiente',
     items: [...carrito]
   };
-  guardarPedidoEnHistorial(nuevoPedido);
+
+  guardarPedidoEnHistorialLocal(nuevoPedido);
 
   carrito = [];
   guardarCarrito();
