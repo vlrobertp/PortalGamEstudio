@@ -3,8 +3,8 @@
 // ==========================================================================
 
 const TELEFONO_WHATSAPP = "5350000000"; // Reemplaza por tu número de WhatsApp sin el '+'
-const TASA_CAMBIO_DEFAULT = 320; // Tasa por defecto CUP/USD
-const TARJETA_PAGO = "9200xxxxXXXXxxxx"; // Número de tarjeta para transferencias
+const TASA_CAMBIO_DEFAULT = 320; 
+const TARJETA_PAGO = "9200xxxxXXXXxxxx"; 
 
 let productos = JSON.parse(localStorage.getItem('portal_productos')) || [
   { id: 1, nombre: "Demon's Souls PS5", precio: 25, modalidad: "Cuenta Primaria", imagen: "https://via.placeholder.com/150" },
@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderizarProductos();
   actualizarCarritoUI();
   
-  // Escuchador para tipo de entrega (mostrar/ocultar dirección)
   const deliverySelect = document.getElementById('delivery-type');
   if (deliverySelect) {
     deliverySelect.addEventListener('change', (e) => {
@@ -104,7 +103,7 @@ function actualizarCarritoUI() {
 }
 
 // ==========================================================================
-// ENVÍO DEL PEDIDO A WHATSAPP Y REGISTRO EN HISTORIAL LOCAL
+// ENVÍO DEL PEDIDO Y REGISTRO EN HISTORIAL
 // ==========================================================================
 
 function sendWhatsAppOrder() {
@@ -115,23 +114,21 @@ function sendWhatsAppOrder() {
   const metodoPago = document.getElementById('payment-method').value;
 
   if (carrito.length === 0) return alert("Tu cesta está vacía.");
-  if (!nombre || !telefono) return alert("Por favor, completa tu nombre y teléfono de contacto.");
-  
+  if (!nombre || !telefono) return alert("Por favor, completa tu nombre y teléfono.");
+
   if (deliveryType === 'Domicilio' && !direccion.trim()) {
     return alert("Por favor, ingresa la dirección para la entrega a domicilio.");
   }
 
-  // Generar ID único de pedido y fecha
   const orderId = "ORD-" + Date.now().toString().slice(-6);
-  const fecha = new Date().toLocaleString('es-ES');
+  const fechaIso = new Date().toISOString();
 
   let totalUSD = 0;
   carrito.forEach(item => totalUSD += item.precio);
 
-  // Guardar objeto del pedido en el almacenamiento local
   const nuevoPedido = {
     id: orderId,
-    fecha: fecha,
+    fecha: fechaIso,
     cliente: nombre,
     telefono: telefono,
     entrega: deliveryType,
@@ -146,9 +143,7 @@ function sendWhatsAppOrder() {
   historial.unshift(nuevoPedido);
   localStorage.setItem('portal_pedidos_historial', JSON.stringify(historial));
 
-  // Construcción del mensaje formateado para WhatsApp
   let mensaje = `🎮 *NUEVO PEDIDO (${orderId}) - PORTAL GAMESTUDIO*\n\n`;
-
   carrito.forEach(item => {
     mensaje += `▪️ *${item.nombre}*\n   Modalidad: ${item.modalidad} ($${item.precio} USD)\n`;
   });
