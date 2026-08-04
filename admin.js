@@ -1,7 +1,3 @@
-/* ==========================================================================
-   PORTAL GAMESTUDIO - ADMIN.JS
-   ========================================================================== */
-
 let productosAdmin = [];
 let categoriasAdmin = [
   { id: "ps5", nombre: "PS5" },
@@ -32,10 +28,8 @@ function guardarConfiguracion() {
   localStorage.setItem('portal_gh_config', JSON.stringify(ghConfig));
   
   const statusEl = document.getElementById('config-status');
-  if (statusEl) {
-    statusEl.innerText = "✅ Configuración guardada";
-    statusEl.style.color = "#00ff88";
-  }
+  statusEl.innerText = "✅ Configuración guardada";
+  statusEl.style.color = "#00ff88";
 }
 
 function cargarConfiguracion() {
@@ -45,13 +39,9 @@ function cargarConfiguracion() {
     if (ghConfig.user && ghConfig.user.startsWith('@')) {
       ghConfig.user = ghConfig.user.substring(1);
     }
-    const uInput = document.getElementById('gh-user');
-    const rInput = document.getElementById('gh-repo');
-    const tInput = document.getElementById('gh-token');
-    
-    if (uInput) uInput.value = ghConfig.user || '';
-    if (rInput) rInput.value = ghConfig.repo || '';
-    if (tInput) tInput.value = ghConfig.token || '';
+    document.getElementById('gh-user').value = ghConfig.user || '';
+    document.getElementById('gh-repo').value = ghConfig.repo || '';
+    document.getElementById('gh-token').value = ghConfig.token || '';
   }
 }
 
@@ -84,7 +74,7 @@ function renderCategoriasUI() {
       tag.style.cssText = 'background: var(--bg-primary); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 15px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;';
       tag.innerHTML = `
         <strong>${cat.nombre}</strong> <small style="color:var(--text-muted);">(${cat.id})</small>
-        <button type="button" onclick="eliminarCategoria('${cat.id}')" style="background:none; border:none; color:var(--danger-color); cursor:pointer; font-weight:bold; font-size:1rem; margin-left:4px;">×</button>
+        <button onclick="eliminarCategoria('${cat.id}')" style="background:none; border:none; color:var(--danger-color); cursor:pointer; font-weight:bold; font-size:1rem; margin-left:4px;">×</button>
       `;
       tagContainer.appendChild(tag);
     });
@@ -152,11 +142,9 @@ async function eliminarCategoria(catId) {
   }
 }
 
-// 4. Render Tabla de Productos y Búsqueda
+// 4. Render Tabla de Productos y Búsqueda en Vivo
 function renderAdminTable(lista = productosAdmin) {
   const tbody = document.getElementById('admin-product-list');
-  if (!tbody) return;
-
   tbody.innerHTML = '';
 
   if (lista.length === 0) {
@@ -174,8 +162,8 @@ function renderAdminTable(lista = productosAdmin) {
       <td><strong>${p.nombre}</strong></td>
       <td>${badgesHTML}</td>
       <td>
-        <button type="button" class="btn-small" style="background:#ffb703; color:#000; border:none;" onclick="editarProducto(${p.id})">✏️</button>
-        <button type="button" class="btn-small" style="background:#ff4757; color:#fff; border:none;" onclick="eliminarProducto(${p.id})">🗑️</button>
+        <button class="btn-small" style="background:#ffb703; color:#000; border:none;" onclick="editarProducto(${p.id})">✏️</button>
+        <button class="btn-small" style="background:#ff4757; color:#fff; border:none;" onclick="eliminarProducto(${p.id})">🗑️</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -198,13 +186,10 @@ function filtrarTablaAdmin() {
 
 function addOpcionRow(nombre = '', precio = '') {
   const container = document.getElementById('opciones-container');
-  if (!container) return;
-
   const div = document.createElement('div');
   div.className = 'opcion-row';
-  div.style.cssText = 'display:flex; gap:10px; margin-bottom:8px;';
   div.innerHTML = `
-    <input type="text" placeholder="Ej: Perdible / Cuenta" value="${nombre}" class="opc-nombre" required style="flex:1;">
+    <input type="text" placeholder="Ej: Perdible / Cuenta" value="${nombre}" class="opc-nombre" required>
     <input type="number" placeholder="Precio ($ USD)" value="${precio}" class="opc-precio" style="width: 120px;" required>
     <button type="button" class="btn-small" style="background:#ff4757; color:#fff; border:none;" onclick="this.parentElement.remove()">❌</button>
   `;
@@ -252,7 +237,7 @@ async function guardarProducto() {
   try {
     let rutaImagen = "./imagenes/placeholder.jpg";
 
-    if (fileInput && fileInput.files.length > 0) {
+    if (fileInput.files.length > 0) {
       const file = fileInput.files[0];
       const cleanFileName = file.name.toLowerCase().replace(/[^a-z0-9.]/g, '_');
       const fileName = `${Date.now()}_${cleanFileName}`;
@@ -404,10 +389,8 @@ function editarProducto(id) {
   });
 
   const container = document.getElementById('opciones-container');
-  if (container) {
-    container.innerHTML = '';
-    p.opciones.forEach(opc => addOpcionRow(opc.nombre, opc.precio));
-  }
+  container.innerHTML = '';
+  p.opciones.forEach(opc => addOpcionRow(opc.nombre, opc.precio));
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -427,36 +410,22 @@ async function eliminarProducto(id) {
 }
 
 function resetForm() {
-  const form = document.getElementById('product-form');
-  if (form) form.reset();
-  
-  const pId = document.getElementById('prod-id');
-  const fTitle = document.getElementById('form-title');
-  if (pId) pId.value = '';
-  if (fTitle) fTitle.innerText = "➕ Agregar Nuevo Producto";
+  document.getElementById('product-form').reset();
+  document.getElementById('prod-id').value = '';
+  document.getElementById('form-title').innerText = "➕ Agregar Nuevo Producto";
   
   document.querySelectorAll('input[name="prod-cat-check"]').forEach(cb => cb.checked = false);
   
-  const container = document.getElementById('opciones-container');
-  if (container) {
-    container.innerHTML = '';
-    addOpcionRow("Permanente", 20);
-  }
+  document.getElementById('opciones-container').innerHTML = '';
+  addOpcionRow("Permanente", 20);
 }
 
 function showToast(mensaje) {
-  let container = document.getElementById('toast-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'toast-container';
-    container.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:9999;';
-    document.body.appendChild(container);
-  }
-
+  const container = document.getElementById('toast-container');
+  if (!container) return;
   const toast = document.createElement('div');
-  toast.style.cssText = 'background:#00ff88; color:#000; padding:10px 16px; border-radius:6px; font-weight:bold; margin-top:8px; box-shadow:0 4px 10px rgba(0,0,0,0.3);';
+  toast.className = 'toast';
   toast.innerHTML = `⚙️ <span>${mensaje}</span>`;
   container.appendChild(toast);
-
   setTimeout(() => toast.remove(), 3000);
 }
