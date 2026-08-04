@@ -19,6 +19,42 @@ document.addEventListener('DOMContentLoaded', () => {
   addOpcionRow("Permanente", 20);
 });
 
+// --- CONFIGURACIÓN Y CONEXIÓN A GITHUB ---
+
+function guardarConfiguracion() {
+  let userRaw = document.getElementById('gh-user').value.trim();
+  ghConfig.user = userRaw.startsWith('@') ? userRaw.substring(1) : userRaw;
+  ghConfig.repo = document.getElementById('gh-repo').value.trim();
+  ghConfig.token = document.getElementById('gh-token').value.trim();
+
+  document.getElementById('gh-user').value = ghConfig.user;
+  localStorage.setItem('portal_gh_config', JSON.stringify(ghConfig));
+  
+  const statusEl = document.getElementById('config-status');
+  if (statusEl) {
+    statusEl.innerText = "✅ Configuración guardada correctamente en el navegador";
+    statusEl.style.color = "#00ff88";
+  }
+  showToast("Configuración guardada correctamente.");
+}
+
+function cargarConfiguracion() {
+  const saved = localStorage.getItem('portal_gh_config');
+  if (saved) {
+    ghConfig = JSON.parse(saved);
+    if (ghConfig.user && ghConfig.user.startsWith('@')) {
+      ghConfig.user = ghConfig.user.substring(1);
+    }
+    const userEl = document.getElementById('gh-user');
+    const repoEl = document.getElementById('gh-repo');
+    const tokenEl = document.getElementById('gh-token');
+
+    if (userEl) userEl.value = ghConfig.user || '';
+    if (repoEl) repoEl.value = ghConfig.repo || '';
+    if (tokenEl) tokenEl.value = ghConfig.token || '';
+  }
+}
+
 // --- MÓDULO DE PEDIDOS Y ESTADÍSTICAS ---
 
 function cargarPedidos() {
@@ -118,7 +154,6 @@ function filtrarPedidos() {
 function calcularEstadisticas() {
   const ahora = new Date();
   
-  // Rango de la semana actual (de Lunes a Domingo)
   const inicioSemana = new Date(ahora);
   const diaSemana = inicioSemana.getDay() || 7; 
   inicioSemana.setDate(inicioSemana.getDate() - diaSemana + 1);
@@ -129,22 +164,18 @@ function calcularEstadisticas() {
   let totalAnio = 0, countAnio = 0;
 
   pedidosAdmin.forEach(p => {
-    // Solo computan para las estadísticas los pedidos completados o pagados
     if (p.estado === 'completado' || p.estado === 'pagado') {
       const f = new Date(p.fecha);
 
-      // Anual
       if (f.getFullYear() === ahora.getFullYear()) {
         totalAnio += p.totalUSD;
         countAnio++;
 
-        // Mensual
         if (f.getMonth() === ahora.getMonth()) {
           totalMes += p.totalUSD;
           countMes++;
         }
 
-        // Semanal
         if (f >= inicioSemana) {
           totalSemana += p.totalUSD;
           countSemana++;
@@ -153,44 +184,24 @@ function calcularEstadisticas() {
     }
   });
 
-  document.getElementById('stat-semana').innerText = `$${totalSemana.toFixed(2)} USD`;
-  document.getElementById('stat-count-semana').innerText = `${countSemana} pedidos procesados`;
+  const statSemana = document.getElementById('stat-semana');
+  const statCountSemana = document.getElementById('stat-count-semana');
+  const statMes = document.getElementById('stat-mes');
+  const statCountMes = document.getElementById('stat-count-mes');
+  const statAnio = document.getElementById('stat-anio');
+  const statCountAnio = document.getElementById('stat-count-anio');
 
-  document.getElementById('stat-mes').innerText = `$${totalMes.toFixed(2)} USD`;
-  document.getElementById('stat-count-mes').innerText = `${countMes} pedidos procesados`;
+  if (statSemana) statSemana.innerText = `$${totalSemana.toFixed(2)} USD`;
+  if (statCountSemana) statCountSemana.innerText = `${countSemana} pedidos procesados`;
 
-  document.getElementById('stat-anio').innerText = `$${totalAnio.toFixed(2)} USD`;
-  document.getElementById('stat-count-anio').innerText = `${countAnio} pedidos procesados`;
+  if (statMes) statMes.innerText = `$${totalMes.toFixed(2)} USD`;
+  if (statCountMes) statCountMes.innerText = `${countMes} pedidos procesados`;
+
+  if (statAnio) statAnio.innerText = `$${totalAnio.toFixed(2)} USD`;
+  if (statCountAnio) statCountAnio.innerText = `${countAnio} pedidos procesados`;
 }
 
-// --- CONFIGURACIÓN Y CATÁLOGO GITHUB ---
-
-function guardarConfiguracion() {
-  let userRaw = document.getElementById('gh-user').value.trim();
-  ghConfig.user = userRaw.startsWith('@') ? userRaw.substring(1) : userRaw;
-  ghConfig.repo = document.getElementById('gh-repo').value.trim();
-  ghConfig.token = document.getElementById('gh-token').value.trim();
-
-  document.getElementById('gh-user').value = ghConfig.user;
-  localStorage.setItem('portal_gh_config', JSON.stringify(ghConfig));
-  
-  const statusEl = document.getElementById('config-status');
-  statusEl.innerText = "✅ Configuración guardada";
-  statusEl.style.color = "#00ff88";
-}
-
-function cargarConfiguracion() {
-  const saved = localStorage.getItem('portal_gh_config');
-  if (saved) {
-    ghConfig = JSON.parse(saved);
-    if (ghConfig.user && ghConfig.user.startsWith('@')) {
-      ghConfig.user = ghConfig.user.substring(1);
-    }
-    document.getElementById('gh-user').value = ghConfig.user || '';
-    document.getElementById('gh-repo').value = ghConfig.repo || '';
-    document.getElementById('gh-token').value = ghConfig.token || '';
-  }
-}
+// --- CATÁLOGO DE PRODUCTOS GITHUB ---
 
 function cargarProductosDesdeJSON() {
   fetch('productos.json')
@@ -211,26 +222,12 @@ function cargarProductosDesdeJSON() {
 }
 
 function renderCategoriasUI() {
-  const tagContainer = document.getElementById('categorias-tag-list');
-  if (tagContainer) {
-    tagContainer.innerHTML = '';
-    categoriasAdmin.forEach(cat => {
-      const tag = document.createElement('span');
-      tag.style.cssText = 'background: var(--bg-primary); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 15px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;';
-      tag.innerHTML = `
-        <strong>${cat.nombre}</strong> <small style="color:var(--text-muted);">(${cat.id})</small>
-        <button onclick="eliminarCategoria('${cat.id}')" style="background:none; border:none; color:var(--danger-color); cursor:pointer; font-weight:bold; font-size:1rem; margin-left:4px;">×</button>
-      `;
-      tagContainer.appendChild(tag);
-    });
-  }
-
   const checkContainer = document.getElementById('categories-checkbox-container');
   if (checkContainer) {
     checkContainer.innerHTML = '';
     categoriasAdmin.forEach(cat => {
       const label = document.createElement('label');
-      label.style.cssText = 'display: inline-flex; align-items: center; gap: 5px; font-size: 0.85rem; cursor: pointer; background: var(--bg-card); padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border-color);';
+      label.style.cssText = 'display: inline-flex; align-items: center; gap: 5px; font-size: 0.85rem; cursor: pointer; background: var(--bg-card); padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border);';
       label.innerHTML = `
         <input type="checkbox" name="prod-cat-check" value="${cat.id}">
         ${cat.nombre}
@@ -242,6 +239,7 @@ function renderCategoriasUI() {
 
 function renderAdminTable(lista = productosAdmin) {
   const tbody = document.getElementById('admin-product-list');
+  if (!tbody) return;
   tbody.innerHTML = '';
 
   if (lista.length === 0) {
@@ -283,6 +281,7 @@ function filtrarTablaAdmin() {
 
 function addOpcionRow(nombre = '', precio = '') {
   const container = document.getElementById('opciones-container');
+  if (!container) return;
   const div = document.createElement('div');
   div.className = 'opcion-row';
   div.style.cssText = 'display:flex; gap:10px; margin-bottom:8px;';
@@ -485,8 +484,10 @@ function editarProducto(id) {
   });
 
   const container = document.getElementById('opciones-container');
-  container.innerHTML = '';
-  p.opciones.forEach(opc => addOpcionRow(opc.nombre, opc.precio));
+  if (container) {
+    container.innerHTML = '';
+    p.opciones.forEach(opc => addOpcionRow(opc.nombre, opc.precio));
+  }
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -506,14 +507,18 @@ async function eliminarProducto(id) {
 }
 
 function resetForm() {
-  document.getElementById('product-form').reset();
+  const form = document.getElementById('product-form');
+  if (form) form.reset();
   document.getElementById('prod-id').value = '';
   document.getElementById('form-title').innerText = "➕ Agregar Nuevo Producto";
   
   document.querySelectorAll('input[name="prod-cat-check"]').forEach(cb => cb.checked = false);
   
-  document.getElementById('opciones-container').innerHTML = '';
-  addOpcionRow("Permanente", 20);
+  const container = document.getElementById('opciones-container');
+  if (container) {
+    container.innerHTML = '';
+    addOpcionRow("Permanente", 20);
+  }
 }
 
 function showToast(mensaje) {
