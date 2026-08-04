@@ -21,7 +21,7 @@ function normalizarTexto(texto) {
 
 // Cargar catálogo, categorías y Cesta guardada al iniciar
 document.addEventListener('DOMContentLoaded', () => {
-  cargarCarritoGuardado(); // Persistencia en localStorage
+  cargarCarritoGuardado();
 
   fetch('productos.json')
     .then(res => res.json())
@@ -40,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(err => console.error("Error al cargar productos.json:", err));
 });
 
-// Renderizar botones de filtro por categoría
 function renderCategoryButtons(listaCategorias) {
   const container = document.querySelector('.categories');
   if (!container) return;
@@ -67,7 +66,6 @@ function renderProducts(lista) {
     return;
   }
 
-  // Obtener datos de la categoría activa
   const catObj = categorias.find(c => c.id === categoriaActual);
   const idCatNorm = normalizarTexto(categoriaActual);
   const nombreCatNorm = catObj ? normalizarTexto(catObj.nombre) : '';
@@ -124,8 +122,6 @@ function updateCardPrice(idProd) {
   const precioSel = prod.opciones[selectIndex].precio;
   document.getElementById(`price-display-${idProd}`).innerText = `$${precioSel} USD`;
 }
-
-// --- PERSISTENCIA DE CESTA EN LOCALSTORAGE ---
 
 function cargarCarritoGuardado() {
   const guardado = localStorage.getItem('portal_carrito');
@@ -291,7 +287,6 @@ function filterProducts() {
   renderProducts(filtrados);
 }
 
-// GUARDADO AUTOMÁTICO DE PEDIDOS AL ENVIAR WHATSAPP
 function guardarPedidoEnHistorial(nuevoPedido) {
   let pedidos = JSON.parse(localStorage.getItem('portal_pedidos') || '[]');
   pedidos.unshift(nuevoPedido);
@@ -344,7 +339,6 @@ function sendWhatsAppOrder() {
 
   mensaje += `\n\n¿Me confirman la disponibilidad para procesar la orden?`;
 
-  // Registrar el pedido en el historial local antes de redirigir a WhatsApp
   const nuevoPedido = {
     id: 'PED-' + Date.now(),
     fecha: new Date().toISOString(),
@@ -354,12 +348,11 @@ function sendWhatsAppOrder() {
     direccion: direccion,
     metodoPago: metodoPago,
     totalUSD: totalUSD,
-    estado: 'pendiente', // pendiente, pagado, completado
+    estado: 'pendiente',
     items: [...carrito]
   };
   guardarPedidoEnHistorial(nuevoPedido);
 
-  // Limpiar carrito tras generar pedido
   carrito = [];
   guardarCarrito();
   updateCartUI();
