@@ -201,19 +201,19 @@
       "imagen": "./imagenes/1785727999136_zkg_product_cover.webp",
       "opciones": [
         {
-          "nombre": "PS5 Permanente",
+          "nombre": "PS5 Inyección Permanente",
           "precio": 45
         },
         {
-          "nombre": "PS5 Perdible",
+          "nombre": "PS5 Inyección Perdible",
           "precio": 25
         },
         {
-          "nombre": "Xbox Perdible",
+          "nombre": "Xbox Series Inyección Perdible",
           "precio": 20
         },
         {
-          "nombre": "Xbox Permanente",
+          "nombre": "Xbox Series Inyección Permanente",
           "precio": 40
         },
         {
