@@ -1,266 +1,29 @@
 {
   "categorias": [
-    {
-      "id": "pirateria_ps5",
-      "nombre": "Piratería PS5"
-    },
-    {
-      "id": "pirateria_ps4",
-      "nombre": "Piratería PS4"
-    },
-    {
-      "id": "perifericos",
-      "nombre": "Accesorios / Discos"
-    },
-    {
-      "id": "ps5inyeccion",
-      "nombre": "PS5 Inyección"
-    },
-    {
-      "id": "ps4inyeccion",
-      "nombre": "PS4 Inyección"
-    },
-    {
-      "id": "xboxone",
-      "nombre": "Xbox One"
-    },
-    {
-      "id": "xboxseries",
-      "nombre": "Xbox Series"
-    },
-    {
-      "id": "xboxgamepass",
-      "nombre": "XBOX GamePass"
-    },
-    {
-      "id": "serviciosxbox",
-      "nombre": "Servicios XBOX"
-    },
-    {
-      "id": "serviciosplaystation",
-      "nombre": "Servicios Playstation"
-    }
+    { "id": "ps5", "nombre": "PlayStation 5" },
+    { "id": "ps4", "nombre": "PlayStation 4" },
+    { "id": "xbox", "nombre": "Xbox" },
+    { "id": "pc", "nombre": "PC Games / STEAM" }
   ],
   "productos": [
     {
       "id": 1,
-      "nombre": "EA SPORTS FC 26",
-      "categorias": [
-        "pirateria_ps5",
-        "pirateria_ps4",
-        "ps5inyeccion",
-        "ps4inyeccion",
-        "xboxgamepass"
-      ],
-      "imagen": "./imagenes/1785727119800_fuh_product_cover.webp",
-      "opciones": [
-        {
-          "nombre": "PS5 Perdible",
-          "precio": 12
-        },
-        {
-          "nombre": "PS5 Permanente",
-          "precio": 25
-        },
-        {
-          "nombre": "Xbox Gamepass",
-          "precio": 0
-        },
-        {
-          "nombre": "PS4 inyeccion Perdible",
-          "precio": 5
-        },
-        {
-          "nombre": "PS4 inyeccion Permanente",
-          "precio": 10
-        },
-        {
-          "nombre": "Piratería PS4",
-          "precio": 1
-        },
-        {
-          "nombre": "Piratería PS5",
-          "precio": 3
-        }
-      ]
-    },
-    {
-      "id": 3,
-      "nombre": "Grand Theft Auto V ",
-      "categorias": [
-        "pirateria_ps5",
-        "pirateria_ps4",
-        "ps5inyeccion",
-        "ps4inyeccion",
-        "xboxone",
-        "xboxseries"
-      ],
-      "imagen": "./imagenes/1785727817514_grand_theft_auto_v_2654943.webp",
-      "opciones": [
-        {
-          "nombre": "PS5 Perdible",
-          "precio": 10
-        },
-        {
-          "nombre": "PS5 Permanente",
-          "precio": 20
-        },
-        {
-          "nombre": "Xbox Perdible",
-          "precio": 6
-        },
-        {
-          "nombre": "Xbox Permanente",
-          "precio": 12
-        },
-        {
-          "nombre": "Piratería PS5 ",
-          "precio": 3
-        },
-        {
-          "nombre": "Piratería PS4 ",
-          "precio": 1
-        },
-        {
-          "nombre": "PS4 Inyección Perdible",
-          "precio": 5
-        },
-        {
-          "nombre": "PS4 Inyección Permanente",
-          "precio": 10
-        }
-      ]
-    },
-    {
-      "id": 4,
-      "nombre": "EA Sports FC 26 + Gamepass (Xbox)",
-      "categoria": "xbox",
-      "imagen": "imagenes/fc26_xbox.jpg",
-      "opciones": [
-        {
-          "nombre": "Perdible",
-          "precio": 6
-        },
-        {
-          "nombre": "Permanente + Gamepass",
-          "precio": 12
-        }
-      ]
-    },
-    {
-      "id": 5,
-      "nombre": "Piratería o Desbloqueo PS5 (v12.70 o inf)",
-      "categorias": [
-        "serviciosplaystation"
-      ],
-      "imagen": "imagenes/ps5_unlock.jpg",
-      "opciones": [
-        {
-          "nombre": "Paquete Básico 2 Juegos",
-          "precio": 30
-        },
-        {
-          "nombre": "Paquete Full Lleno de juegos",
-          "precio": 45
-        }
-      ]
-    },
-    {
-      "id": 6,
-      "nombre": "P4Tool (Auto Hack 11.00 PS4)",
-      "categorias": [
-        "serviciosplaystation"
-      ],
-      "imagen": "imagenes/p4tool.jpg",
-      "opciones": [
-        {
-          "nombre": "Dispositivo Standard",
-          "precio": 35
-        }
-      ]
-    },
-    {
-      "id": 7,
-      "nombre": "Funda de Silicona DualSense PS5 + Grips",
-      "categoria": "perifericos",
-      "imagen": "imagenes/funda_ps5.jpg",
-      "opciones": [
-        {
-          "nombre": "Accesorio Único",
-          "precio": 15
-        }
-      ]
-    },
-    {
-      "id": 8,
-      "nombre": "007 First Light",
+      "nombre": "EA Sports FC 25",
       "categoria": "ps5",
-      "imagen": "./imagenes/1785725249117_images_-_2026-07-19t121412.207.jpeg",
+      "imagen": "https://via.placeholder.com/300x200?text=FC+25",
       "opciones": [
-        {
-          "nombre": "Permanente",
-          "precio": 45
-        },
-        {
-          "nombre": "Perdible",
-          "precio": 25
-        }
+        { "nombre": "Cuenta Primaria PS5", "precio": 35 },
+        { "nombre": "Cuenta Secundaria PS5", "precio": 25 }
       ]
     },
     {
-      "id": 9,
-      "nombre": "007 First Light",
-      "categoria": "ps5",
-      "imagen": "./imagenes/1785725339926_images_-_2026-07-19t121412.207.jpeg",
+      "id": 2,
+      "nombre": "Grand Theft Auto V",
+      "categoria": "ps4",
+      "imagen": "https://via.placeholder.com/300x200?text=GTA+V",
       "opciones": [
-        {
-          "nombre": "PS5 Permanente",
-          "precio": 45
-        },
-        {
-          "nombre": "PS5 Perdible",
-          "precio": 25
-        },
-        {
-          "nombre": "Xbox Permanente",
-          "precio": 40
-        },
-        {
-          "nombre": "Xbox Perdible",
-          "precio": 20
-        }
-      ]
-    },
-    {
-      "id": 10,
-      "nombre": "Black Myth: Wukong",
-      "categorias": [
-        "pirateria_ps5",
-        "ps5inyeccion",
-        "xboxseries"
-      ],
-      "imagen": "./imagenes/1785727999136_zkg_product_cover.webp",
-      "opciones": [
-        {
-          "nombre": "PS5 Permanente",
-          "precio": 45
-        },
-        {
-          "nombre": "PS5 Perdible",
-          "precio": 25
-        },
-        {
-          "nombre": "Xbox Perdible",
-          "precio": 20
-        },
-        {
-          "nombre": "Xbox Permanente",
-          "precio": 40
-        },
-        {
-          "nombre": "Piratería PS5 ",
-          "precio": 3
-        }
+        { "nombre": "Cuenta Primaria PS4", "precio": 15 },
+        { "nombre": "Código Canjeable PC", "precio": 20 }
       ]
     }
   ]
