@@ -3,113 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portal Gamestudio - Catálogo</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Portal GamEstudio | Tienda de Videojuegos</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <!-- HEADER -->
   <header>
     <div class="header-container">
-      <div class="logo">
-        <span class="logo-icon">🎮</span> PORTAL <span>GAMESTUDIO</span>
-      </div>
-      <div class="header-actions">
-        <button class="cart-btn" onclick="toggleCart()">
-          🛒 Cesta <span id="cart-count">0</span>
-        </button>
+      <h1>🎮 Portal GamEstudio</h1>
+      <div class="cart-btn" onclick="toggleCart()">
+        🛒 Cesta (<span id="cart-count">0</span>)
       </div>
     </div>
   </header>
 
-  <!-- CONTENIDO PRINCIPAL -->
-  <main class="container">
-    
-    <!-- BARRA DE BÚSQUEDA Y FILTROS -->
+  <main class="main-container">
+    <!-- Buscador y Filtros por Categoría -->
     <section class="controls">
-      <div class="search-box">
-        <input type="text" id="search-input" placeholder="Buscar juego o servicio..." oninput="filterProducts()">
-      </div>
+      <input type="text" id="search-input" placeholder="🔍 Buscar juego o servicio..." onkeyup="filterProducts()">
       <div class="categories">
-        <!-- Generado dinámicamente -->
+        <button class="cat-btn active" onclick="filterCategory('todos')">Todos</button>
+        <button class="cat-btn" onclick="filterCategory('ps5')">PS5</button>
+        <button class="cat-btn" onclick="filterCategory('ps4')">PS4</button>
+        <button class="cat-btn" onclick="filterCategory('xbox')">Xbox</button>
+        <button class="cat-btn" onclick="filterCategory('pirateria_ps5')">Piratería PS5</button>
+        <button class="cat-btn" onclick="filterCategory('pirateria_ps4')">Piratería PS4</button>
+        <button class="cat-btn" onclick="filterCategory('perifericos')">Accesorios / Discos</button>
+        <button class="cat-btn" onclick="filterCategory('servicios')">Servicios Técnicos</button>
       </div>
     </section>
 
-    <!-- GRILLA DE PRODUCTOS -->
-    <section id="product-grid" class="grid">
-      <!-- Generado dinámicamente -->
+    <!-- Catálogo de Productos -->
+    <section id="product-grid" class="product-grid">
+      <!-- Los productos se cargan dinámicamente -->
     </section>
-
   </main>
 
-  <!-- MODAL / MODAL CESTA DE COMPRAS -->
-  <div id="cart-modal" class="modal-overlay">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>🛒 Tu Cesta de Compras</h2>
-        <button class="close-btn" onclick="toggleCart()">✕</button>
+  <!-- Modal del Carrito de Compras -->
+  <div id="cart-modal" class="cart-modal">
+    <div class="cart-content">
+      <h2>Tu Pedido</h2>
+      <ul id="cart-items" class="cart-list"></ul>
+      
+      <!-- Desglose de Totales -->
+      <div class="cart-total">
+        <div style="font-size: 1.3rem;">Total: <strong>$<span id="cart-total-usd">0</span> USD</strong></div>
+        <div id="cup-conversion-box" style="display: none; margin-top: 5px; color: #00ff88; font-weight: bold;">
+          Equivalente a pagar: <span id="cart-total-cup">0</span> CUP
+        </div>
       </div>
 
-      <div class="modal-body">
-        <ul id="cart-items" class="cart-list">
-          <!-- Elementos de la cesta -->
-        </ul>
+      <div class="form-group">
+        <label>Tipo de Entrega:</label>
+        <select id="delivery-type" onchange="toggleDeliveryAddress()">
+          <option value="Tienda / Digital">En Tienda / Entrega Digital</option>
+          <option value="Domicilio">Envío a Domicilio</option>
+        </select>
 
-        <div class="cart-summary">
-          <p>Total USD: <strong>$<span id="cart-total-usd">0</span> USD</strong></p>
-          <div id="cup-conversion-box" class="conversion-box">
-            <p>Total en CUP: <strong><span id="cart-total-cup">0</span> CUP</strong></p>
-          </div>
+        <!-- Campo de Dirección (Solo visible si selecciona Domicilio) -->
+        <div id="address-group" style="display: none; margin-top: 10px;">
+          <label>Dirección de entrega (La Habana):</label>
+          <input type="text" id="client-address" placeholder="Ej: Calle 31 #4205 e/ 42 y 44, Marianao">
         </div>
 
-        <hr>
+        <label style="margin-top: 10px;">Moneda y Método de Pago:</label>
+        <select id="payment-method" onchange="toggleExchangeRateInput()">
+          <option value="USD - Efectivo">Efectivo en USD ($)</option>
+          <option value="CUP - Transferencia">Transferencia en CUP (Transfermóvil / EnZona)</option>
+          <option value="CUP - Efectivo">Efectivo en CUP</option>
+        </select>
 
-        <h3>📋 Datos del Pedido</h3>
-        <form id="order-form" onsubmit="event.preventDefault(); sendWhatsAppOrder();">
-          <div class="form-group">
-            <label for="client-name">Nombre completo *</label>
-            <input type="text" id="client-name" required placeholder="Tu nombre">
-          </div>
-
-          <div class="form-group">
-            <label for="client-phone">Teléfono de contacto *</label>
-            <input type="tel" id="client-phone" required placeholder="Ej. 52890559">
-          </div>
-
-          <div class="form-group">
-            <label for="delivery-type">Tipo de entrega</label>
-            <select id="delivery-type" onchange="toggleDeliveryAddress()">
-              <option value="Digital / Remoto">Digital / En tienda</option>
-              <option value="Domicilio">Entrega a domicilio</option>
-            </select>
-          </div>
-
-          <div class="form-group" id="address-group" style="display: none;">
-            <label for="client-address">Dirección exacta</label>
-            <textarea id="client-address" rows="2" placeholder="Dirección para la entrega"></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="payment-method">Método de pago</label>
-            <select id="payment-method" onchange="toggleExchangeRateInput()">
-              <option value="Efectivo USD">Efectivo USD</option>
-              <option value="Transferencia CUP">Transferencia CUP</option>
-              <option value="Efectivo CUP">Efectivo CUP</option>
-              <option value="USD Digital">USD Digital (MLC / Zelle)</option>
-            </select>
-          </div>
-
-          <button type="submit" class="btn-checkout">📱 Confirmar por WhatsApp</button>
-        </form>
+        <label style="margin-top: 10px;">Nombre completo:</label>
+        <input type="text" id="client-name" placeholder="Ej: Carlos Pérez">
+        
+        <label>Teléfono de contacto:</label>
+        <input type="tel" id="client-phone" placeholder="Ej: 5351234567">
       </div>
+
+      <button class="btn-whatsapp" onclick="sendWhatsAppOrder()">📲 Enviar Pedido por WhatsApp</button>
+      <button class="btn-close" onclick="toggleCart()">Cerrar</button>
     </div>
   </div>
 
-  <!-- NOTIFICACIONES TOAST -->
-  <div id="toast-container"></div>
+  <!-- Contenedor para notificaciones flotantes -->
+  <div id="toast-container" class="toast-container"></div>
 
   <script src="app.js"></script>
 </body>
