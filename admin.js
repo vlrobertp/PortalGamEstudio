@@ -61,7 +61,10 @@ function cargarPedidos() {
   pedidosAdmin = JSON.parse(localStorage.getItem('portal_pedidos') || '[]');
   
   fetch('pedidos.json')
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) throw new Error("pedidos.json no existe aún en GitHub");
+      return res.json();
+    })
     .then(data => {
       if (Array.isArray(data)) {
         const idsExistentes = new Set(pedidosAdmin.map(p => p.id));
