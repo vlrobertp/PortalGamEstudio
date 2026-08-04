@@ -67,6 +67,11 @@ function renderProducts(lista) {
     return;
   }
 
+  // Obtener datos de la categoría activa
+  const catObj = categorias.find(c => c.id === categoriaActual);
+  const idCatNorm = normalizarTexto(categoriaActual);
+  const nombreCatNorm = catObj ? normalizarTexto(catObj.nombre) : '';
+
   lista.forEach(p => {
     const card = document.createElement('div');
     card.className = 'product-card';
@@ -76,10 +81,6 @@ function renderProducts(lista) {
 
     if (p.opciones && p.opciones.length > 0) {
       if (categoriaActual !== 'todos') {
-        const catObj = categorias.find(c => c.id === categoriaActual);
-        const idCatNorm = normalizarTexto(categoriaActual);
-        const nombreCatNorm = catObj ? normalizarTexto(catObj.nombre) : '';
-
         // Buscar el índice de la opción que coincida con la categoría activa
         const indexCoincidente = p.opciones.findIndex(opc => {
           const opcNorm = normalizarTexto(opc.nombre);
@@ -252,8 +253,20 @@ function toggleCart() {
 
 function filterCategory(cat, element) {
   categoriaActual = cat;
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-  if (element) element.classList.add('active');
+  
+  const buttons = document.querySelectorAll('.cat-btn');
+  buttons.forEach(b => b.classList.remove('active'));
+  
+  if (element) {
+    element.classList.add('active');
+  } else {
+    buttons.forEach(b => {
+      const onclickAttr = b.getAttribute('onclick');
+      if (onclickAttr && onclickAttr.includes(`'${cat}'`)) {
+        b.classList.add('active');
+      }
+    });
+  }
   
   let filtrados = cat === 'todos' 
     ? productos 
