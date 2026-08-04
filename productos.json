@@ -152,8 +152,10 @@
     {
       "id": 7,
       "nombre": "Funda de Silicona DualSense PS5 + Grips",
-      "categoria": "perifericos",
-      "imagen": "imagenes/funda_ps5.jpg",
+      "categorias": [
+        "perifericos"
+      ],
+      "imagen": "./imagenes/1785829804843_mlm_product_cover.webp",
       "opciones": [
         {
           "nombre": "Accesorio Único",
