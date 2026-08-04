@@ -1,431 +1,200 @@
-let productosAdmin = [];
-let categoriasAdmin = [
-  { id: "ps5", nombre: "PS5" },
-  { id: "ps4", nombre: "PS4" },
-  { id: "xbox", nombre: "Xbox" },
-  { id: "pirateria_ps5", nombre: "Piratería PS5" },
-  { id: "pirateria_ps4", nombre: "Piratería PS4" },
-  { id: "perifericos", nombre: "Accesorios / Discos" },
-  { id: "servicios", nombre: "Servicios Técnicos" }
-];
-
-let ghConfig = { user: '', repo: '', token: '' };
+// ==========================================================================
+// INICIALIZACIÓN
+// ==========================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-  cargarConfiguracion();
-  cargarProductosDesdeJSON();
-  addOpcionRow("Permanente", 20);
+  cargarProductosAdminUI();
+  cargarPedidosUI();
 });
 
-// 1. Guardar y Cargar Configuración
-function guardarConfiguracion() {
-  let userRaw = document.getElementById('gh-user').value.trim();
-  ghConfig.user = userRaw.startsWith('@') ? userRaw.substring(1) : userRaw;
-  ghConfig.repo = document.getElementById('gh-repo').value.trim();
-  ghConfig.token = document.getElementById('gh-token').value.trim();
-
-  document.getElementById('gh-user').value = ghConfig.user;
-  localStorage.setItem('portal_gh_config', JSON.stringify(ghConfig));
-  
-  const statusEl = document.getElementById('config-status');
-  statusEl.innerText = "✅ Configuración guardada";
-  statusEl.style.color = "#00ff88";
-}
-
-function cargarConfiguracion() {
-  const saved = localStorage.getItem('portal_gh_config');
-  if (saved) {
-    ghConfig = JSON.parse(saved);
-    if (ghConfig.user && ghConfig.user.startsWith('@')) {
-      ghConfig.user = ghConfig.user.substring(1);
-    }
-    document.getElementById('gh-user').value = ghConfig.user || '';
-    document.getElementById('gh-repo').value = ghConfig.repo || '';
-    document.getElementById('gh-token').value = ghConfig.token || '';
+function showToast(mensaje) {
+  const toast = document.getElementById('toast-msg');
+  if (toast) {
+    toast.textContent = mensaje;
+    toast.style.display = 'block';
+    setTimeout(() => {
+      toast.style.display = 'none';
+    }, 3000);
   }
 }
 
-// 2. Cargar Catálogo y Categorías
-function cargarProductosDesdeJSON() {
-  fetch('productos.json')
-    .then(res => res.json())
-    .then(data => {
-      if (Array.isArray(data)) {
-        productosAdmin = data;
-      } else {
-        productosAdmin = data.productos || [];
-        if (data.categorias && data.categorias.length > 0) {
-          categoriasAdmin = data.categorias;
-        }
-      }
-      renderCategoriasUI();
-      renderAdminTable(productosAdmin);
-    })
-    .catch(err => console.error("Error al cargar productos.json:", err));
+// ==========================================================================
+// GESTIÓN DEL INVENTARIO DE PRODUCTOS
+// ==========================================================================
+
+function obtenerProductos() {
+  return JSON.parse(localStorage.getItem('portal_productos')) || [];
 }
 
-// 3. Renderizar Categorías en la Interfaz
-function renderCategoriasUI() {
-  const tagContainer = document.getElementById('categorias-tag-list');
-  if (tagContainer) {
-    tagContainer.innerHTML = '';
-    categoriasAdmin.forEach(cat => {
-      const tag = document.createElement('span');
-      tag.style.cssText = 'background: var(--bg-primary); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 15px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;';
-      tag.innerHTML = `
-        <strong>${cat.nombre}</strong> <small style="color:var(--text-muted);">(${cat.id})</small>
-        <button onclick="eliminarCategoria('${cat.id}')" style="background:none; border:none; color:var(--danger-color); cursor:pointer; font-weight:bold; font-size:1rem; margin-left:4px;">×</button>
-      `;
-      tagContainer.appendChild(tag);
-    });
-  }
-
-  const checkContainer = document.getElementById('categories-checkbox-container');
-  if (checkContainer) {
-    checkContainer.innerHTML = '';
-    categoriasAdmin.forEach(cat => {
-      const label = document.createElement('label');
-      label.style.cssText = 'display: inline-flex; align-items: center; gap: 5px; font-size: 0.85rem; cursor: pointer; background: var(--bg-card); padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border-color);';
-      label.innerHTML = `
-        <input type="checkbox" name="prod-cat-check" value="${cat.id}">
-        ${cat.nombre}
-      `;
-      checkContainer.appendChild(label);
-    });
-  }
+function guardarProductos(productos) {
+  localStorage.setItem('portal_productos', JSON.stringify(productos));
 }
 
-async function agregarCategoria() {
-  const idInput = document.getElementById('new-cat-id');
-  const nameInput = document.getElementById('new-cat-name');
-  
-  const id = idInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-  const nombre = nameInput.value.trim();
+function cargarProductosAdminUI() {
+  const tbody = document.getElementById('admin-productos-list');
+  if (!tbody) return;
 
-  if (!id || !nombre) {
-    alert("Por favor completa el ID corto y el Nombre de la categoría.");
-    return;
-  }
-
-  if (categoriasAdmin.some(c => c.id === id)) {
-    alert("Ya existe una categoría con ese ID.");
-    return;
-  }
-
-  categoriasAdmin.push({ id, nombre });
-  renderCategoriasUI();
-
-  idInput.value = '';
-  nameInput.value = '';
-
-  try {
-    showToast("Guardando nueva categoría en GitHub...");
-    await updateJSONInGitHub({ categorias: categoriasAdmin, productos: productosAdmin });
-    showToast("Categoría agregada con éxito.");
-  } catch (err) {
-    alert("Error al guardar categoría: " + err.message);
-  }
-}
-
-async function eliminarCategoria(catId) {
-  if (!confirm(`¿Eliminar la categoría "${catId}"?`)) return;
-
-  categoriasAdmin = categoriasAdmin.filter(c => c.id !== catId);
-  renderCategoriasUI();
-
-  try {
-    showToast("Guardando cambios en GitHub...");
-    await updateJSONInGitHub({ categorias: categoriasAdmin, productos: productosAdmin });
-    showToast("Categoría eliminada.");
-  } catch (err) {
-    alert("Error al eliminar categoría: " + err.message);
-  }
-}
-
-// 4. Render Tabla de Productos y Búsqueda en Vivo
-function renderAdminTable(lista = productosAdmin) {
-  const tbody = document.getElementById('admin-product-list');
+  const productos = obtenerProductos();
   tbody.innerHTML = '';
 
-  if (lista.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 15px;">No se encontraron productos.</td></tr>`;
-    return;
-  }
-
-  lista.forEach(p => {
-    const catsArray = Array.isArray(p.categorias) ? p.categorias : [p.categoria || 'sin_categoria'];
-    const badgesHTML = catsArray.map(c => `<span class="badge">${c}</span>`).join(' ');
-
+  productos.forEach((p) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><img src="${p.imagen}" onerror="this.src='https://via.placeholder.com/40';"></td>
       <td><strong>${p.nombre}</strong></td>
-      <td>${badgesHTML}</td>
+      <td>${p.modalidad}</td>
+      <td>$${p.precio} USD</td>
       <td>
-        <button class="btn-small" style="background:#ffb703; color:#000; border:none;" onclick="editarProducto(${p.id})">✏️</button>
-        <button class="btn-small" style="background:#ff4757; color:#fff; border:none;" onclick="eliminarProducto(${p.id})">🗑️</button>
+        <button class="btn-small" style="background:#ff4757; color:#fff; border:none;" onclick="eliminarProducto(${p.id})">🗑️ Eliminar</button>
       </td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-function filtrarTablaAdmin() {
-  const query = document.getElementById('admin-search-input').value.toLowerCase().trim();
-  
-  const filtrados = productosAdmin.filter(p => {
-    const coincideNombre = p.nombre.toLowerCase().includes(query);
-    const catsArray = Array.isArray(p.categorias) ? p.categorias : [p.categoria || ''];
-    const coincideCategoria = catsArray.some(c => c.toLowerCase().includes(query));
-    
-    return coincideNombre || coincideCategoria;
-  });
+function agregarNuevoProductoModal() {
+  const nombre = prompt("Nombre del videojuego o servicio:");
+  if (!nombre) return;
 
-  renderAdminTable(filtrados);
-}
+  const modalidad = prompt("Modalidad (Ej: Cuenta Primaria, Cuenta Secundaria, Código):", "Cuenta Primaria");
+  if (!modalidad) return;
 
-function addOpcionRow(nombre = '', precio = '') {
-  const container = document.getElementById('opciones-container');
-  const div = document.createElement('div');
-  div.className = 'opcion-row';
-  div.innerHTML = `
-    <input type="text" placeholder="Ej: Perdible / Cuenta" value="${nombre}" class="opc-nombre" required>
-    <input type="number" placeholder="Precio ($ USD)" value="${precio}" class="opc-precio" style="width: 120px;" required>
-    <button type="button" class="btn-small" style="background:#ff4757; color:#fff; border:none;" onclick="this.parentElement.remove()">❌</button>
-  `;
-  container.appendChild(div);
-}
+  const precioStr = prompt("Precio en USD ($):");
+  const precio = parseFloat(precioStr);
+  if (isNaN(precio)) return alert("Precio no válido.");
 
-// 5. Guardar / Publicar Producto
-async function guardarProducto() {
-  if (ghConfig.user.startsWith('@')) {
-    ghConfig.user = ghConfig.user.substring(1);
-  }
-
-  if (!ghConfig.token || !ghConfig.user || !ghConfig.repo) {
-    alert("Por favor, completa y guarda primero los datos de configuración de GitHub.");
-    return;
-  }
-
-  const idEdit = document.getElementById('prod-id').value;
-  const nombre = document.getElementById('prod-nombre').value;
-  const fileInput = document.getElementById('prod-file');
-
-  const checkboxes = document.querySelectorAll('input[name="prod-cat-check"]:checked');
-  let categoriasSeleccionadas = Array.from(checkboxes).map(cb => cb.value);
-
-  if (categoriasSeleccionadas.length === 0) {
-    alert("Debes seleccionar al menos una categoría para el producto.");
-    return;
-  }
-  
-  const opcNombres = document.querySelectorAll('.opc-nombre');
-  const opcPrecios = document.querySelectorAll('.opc-precio');
-  let opciones = [];
-  
-  opcNombres.forEach((input, i) => {
-    opciones.push({
-      nombre: input.value,
-      precio: parseFloat(opcPrecios[i].value) || 0
-    });
-  });
-
-  const btnSubmit = document.getElementById('btn-submit');
-  btnSubmit.disabled = true;
-  btnSubmit.innerText = "⏳ Subiendo a GitHub...";
-
-  try {
-    let rutaImagen = "./imagenes/placeholder.jpg";
-
-    if (fileInput.files.length > 0) {
-      const file = fileInput.files[0];
-      const cleanFileName = file.name.toLowerCase().replace(/[^a-z0-9.]/g, '_');
-      const fileName = `${Date.now()}_${cleanFileName}`;
-      rutaImagen = `./imagenes/${fileName}`;
-
-      showToast("Subiendo imagen...");
-      await uploadFileToGitHub(`imagenes/${fileName}`, file);
-    } else if (idEdit) {
-      const prodExistente = productosAdmin.find(p => p.id === parseInt(idEdit));
-      if (prodExistente) rutaImagen = prodExistente.imagen;
-    }
-
-    if (idEdit) {
-      const idx = productosAdmin.findIndex(p => p.id === parseInt(idEdit));
-      productosAdmin[idx] = { 
-        id: parseInt(idEdit), 
-        nombre, 
-        categorias: categoriasSeleccionadas, 
-        imagen: rutaImagen, 
-        opciones 
-      };
-    } else {
-      const newId = productosAdmin.length > 0 ? Math.max(...productosAdmin.map(p => p.id)) + 1 : 1;
-      productosAdmin.push({ 
-        id: newId, 
-        nombre, 
-        categorias: categoriasSeleccionadas, 
-        imagen: rutaImagen, 
-        opciones 
-      });
-    }
-
-    showToast("Actualizando productos.json en GitHub...");
-    await updateJSONInGitHub({ categorias: categoriasAdmin, productos: productosAdmin });
-
-    showToast("¡Publicación exitosa!");
-    filtrarTablaAdmin();
-    resetForm();
-
-  } catch (err) {
-    alert("Error al conectar con la API de GitHub: " + err.message);
-  } finally {
-    btnSubmit.disabled = false;
-    btnSubmit.innerText = "🚀 Publicar en GitHub";
-  }
-}
-
-// 6. Subida de Archivos y API GitHub
-async function uploadFileToGitHub(path, file) {
-  const base64Content = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]);
-    reader.onerror = error => reject(error);
-    reader.readAsDataURL(file);
-  });
-
-  const url = `https://api.github.com/repos/${ghConfig.user}/${ghConfig.repo}/contents/${path}`;
-  
-  let sha = null;
-  try {
-    const getRes = await fetch(url, { 
-      headers: { 
-        'Authorization': `Bearer ${ghConfig.token}`,
-        'Accept': 'application/vnd.github.v3+json'
-      } 
-    });
-    if (getRes.ok) {
-      const getData = await getRes.json();
-      sha = getData.sha;
-    }
-  } catch (e) {}
-
-  const body = {
-    message: `Añadida imagen: ${path} desde Panel Admin`,
-    content: base64Content
+  let productos = obtenerProductos();
+  const nuevoProducto = {
+    id: Date.now(),
+    nombre: nombre,
+    modalidad: modalidad,
+    precio: precio,
+    imagen: "https://via.placeholder.com/150"
   };
-  if (sha) body.sha = sha;
 
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${ghConfig.token}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.github.v3+json'
-    },
-    body: JSON.stringify(body)
+  productos.push(nuevoProducto);
+  guardarProductos(productos);
+  cargarProductosAdminUI();
+  showToast("Producto agregado correctamente.");
+}
+
+function eliminarProducto(id) {
+  if (!confirm("¿Deseas eliminar este producto del catálogo?")) return;
+
+  let productos = obtenerProductos();
+  productos = productos.filter(p => p.id !== id);
+  guardarProductos(productos);
+  cargarProductosAdminUI();
+  showToast("Producto eliminado.");
+}
+
+// ==========================================================================
+// GESTIÓN DEL HISTORIAL DE PEDIDOS
+// ==========================================================================
+
+function obtenerPedidos() {
+  return JSON.parse(localStorage.getItem('portal_pedidos_historial')) || [];
+}
+
+function guardarPedidos(pedidos) {
+  localStorage.setItem('portal_pedidos_historial', JSON.stringify(pedidos));
+}
+
+function cargarPedidosUI() {
+  const tbody = document.getElementById('admin-pedidos-list');
+  if (!tbody) return;
+
+  const pedidos = obtenerPedidos();
+  tbody.innerHTML = '';
+
+  if (pedidos.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 15px;">No hay pedidos registrados en la base local.</td></tr>`;
+    return;
+  }
+
+  pedidos.forEach(p => {
+    const itemsHTML = p.items.map(item => `• ${item.nombre} <small>(${item.modalidad})</small>`).join('<br>');
+    
+    // Colores indicadores por estado
+    let badgeColor = '#ffb703'; // pendiente (amarillo)
+    if (p.estado === 'pagado') badgeColor = '#00b4d8'; // pagado (azul)
+    if (p.estado === 'completado') badgeColor = '#00ff88'; // completado (verde)
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <strong>${p.id}</strong><br>
+        <small style="color:var(--text-muted);">${p.fecha}</small>
+      </td>
+      <td>
+        <strong>${p.cliente}</strong><br>
+        <small style="color:var(--text-muted);">${p.telefono}</small><br>
+        <small>🚚 ${p.entrega}</small>
+      </td>
+      <td>${itemsHTML}</td>
+      <td><strong>$${p.totalUSD} USD</strong><br><small style="color:var(--text-muted);">${p.metodoPago}</small></td>
+      <td>
+        <select onchange="cambiarEstadoPedido('${p.id}', this.value)" style="padding: 4px; border-radius: 4px; background: var(--bg-primary); color: ${badgeColor}; border: 1px solid ${badgeColor}; font-weight: bold;">
+          <option value="pendiente" ${p.estado === 'pendiente' ? 'selected' : ''}>⏳ Pendiente</option>
+          <option value="pagado" ${p.estado === 'pagado' ? 'selected' : ''}>💳 Pagado</option>
+          <option value="completado" ${p.estado === 'completado' ? 'selected' : ''}>✅ Completado</option>
+        </select>
+      </td>
+      <td>
+        <button class="btn-small" style="background:#ffb703; color:#000; border:none; margin-bottom: 2px;" onclick="editarPedidoModal('${p.id}')">✏️</button>
+        <button class="btn-small" style="background:#ff4757; color:#fff; border:none;" onclick="eliminarPedido('${p.id}')">🗑️</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
   });
+}
 
-  if (!res.ok) {
-    const errData = await res.json();
-    throw new Error(`[HTTP ${res.status}] ${errData.message || 'No se pudo subir la imagen'}`);
+function cambiarEstadoPedido(orderId, nuevoEstado) {
+  let pedidos = obtenerPedidos();
+  const idx = pedidos.findIndex(p => p.id === orderId);
+  if (idx !== -1) {
+    pedidos[idx].estado = nuevoEstado;
+    guardarPedidos(pedidos);
+    cargarPedidosUI();
+    showToast(`Pedido ${orderId} actualizado a "${nuevoEstado}".`);
   }
 }
 
-async function updateJSONInGitHub(contentObject) {
-  const path = "productos.json";
-  const url = `https://api.github.com/repos/${ghConfig.user}/${ghConfig.repo}/contents/${path}`;
-
-  const getRes = await fetch(url, { 
-    headers: { 
-      'Authorization': `Bearer ${ghConfig.token}`,
-      'Accept': 'application/vnd.github.v3+json'
-    } 
-  });
-  
-  if (!getRes.ok) {
-    const errData = await res.json();
-    throw new Error(`[HTTP ${res.status}] No se encontró productos.json: ${errData.message}`);
-  }
-
-  const getData = await getRes.json();
-  const sha = getData.sha;
-
-  const jsonString = JSON.stringify(contentObject, null, 2);
-  const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
-
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${ghConfig.token}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.github.v3+json'
-    },
-    body: JSON.stringify({
-      message: `Actualizado catálogo y categorías desde Panel Admin`,
-      content: base64Content,
-      sha: sha
-    })
-  });
-
-  if (!res.ok) {
-    const errData = await res.json();
-    throw new Error(`[HTTP ${res.status}] ${errData.message || 'No se pudo actualizar productos.json'}`);
-  }
-}
-
-function editarProducto(id) {
-  const p = productosAdmin.find(item => item.id === id);
+function editarPedidoModal(orderId) {
+  let pedidos = obtenerPedidos();
+  const p = pedidos.find(item => item.id === orderId);
   if (!p) return;
 
-  document.getElementById('prod-id').value = p.id;
-  document.getElementById('prod-nombre').value = p.nombre;
-  document.getElementById('form-title').innerText = "✏️ Editar Producto";
+  const nuevoNombre = prompt("Editar nombre del cliente:", p.cliente);
+  if (nuevoNombre === null) return;
 
-  const catsArray = Array.isArray(p.categorias) ? p.categorias : [p.categoria];
-  const checkboxes = document.querySelectorAll('input[name="prod-cat-check"]');
-  checkboxes.forEach(cb => {
-    cb.checked = catsArray.includes(cb.value);
-  });
+  const nuevoTelefono = prompt("Editar teléfono de contacto:", p.telefono);
+  if (nuevoTelefono === null) return;
 
-  const container = document.getElementById('opciones-container');
-  container.innerHTML = '';
-  p.opciones.forEach(opc => addOpcionRow(opc.nombre, opc.precio));
+  p.cliente = nuevoNombre.trim() || p.cliente;
+  p.telefono = nuevoTelefono.trim() || p.telefono;
 
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  guardarPedidos(pedidos);
+  cargarPedidosUI();
+  showToast("Datos del pedido actualizados.");
 }
 
-async function eliminarProducto(id) {
-  if (!confirm("¿Seguro que deseas eliminar este producto?")) return;
+function eliminarPedido(orderId) {
+  if (!confirm(`¿Deseas eliminar permanentemente el pedido ${orderId}?`)) return;
 
-  productosAdmin = productosAdmin.filter(p => p.id !== id);
-  try {
-    showToast("Guardando cambios en GitHub...");
-    await updateJSONInGitHub({ categorias: categoriasAdmin, productos: productosAdmin });
-    filtrarTablaAdmin();
-    showToast("Producto eliminado correctamente.");
-  } catch (e) {
-    alert("Error al eliminar: " + e.message);
-  }
+  let pedidos = obtenerPedidos();
+  pedidos = pedidos.filter(p => p.id !== orderId);
+  guardarPedidos(pedidos);
+  cargarPedidosUI();
+  showToast("Pedido eliminado del historial.");
 }
 
-function resetForm() {
-  document.getElementById('product-form').reset();
-  document.getElementById('prod-id').value = '';
-  document.getElementById('form-title').innerText = "➕ Agregar Nuevo Producto";
-  
-  document.querySelectorAll('input[name="prod-cat-check"]').forEach(cb => cb.checked = false);
-  
-  document.getElementById('opciones-container').innerHTML = '';
-  addOpcionRow("Permanente", 20);
-}
-
-function showToast(mensaje) {
-  const container = document.getElementById('toast-container');
-  if (!container) return;
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.innerHTML = `⚙️ <span>${mensaje}</span>`;
-  container.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+function exportarPedidosJSON() {
+  const pedidos = obtenerPedidos();
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(pedidos, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", `pedidos_portal_gamestudio_${Date.now()}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
 }
