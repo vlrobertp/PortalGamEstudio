@@ -345,7 +345,7 @@ async function updateJSONInGitHub(contentObject) {
   
   if (!getRes.ok) {
     const errData = await getRes.json();
-    throw new Error(`[HTTP ${res.status}] No se encontró productos.json: ${errData.message}`);
+    throw new Error(`[HTTP ${getRes.status}] No se encontró productos.json: ${errData.message}`);
   }
 
   const getData = await getRes.json();
