@@ -168,7 +168,9 @@
     {
       "id": 6,
       "nombre": "P4Tool (Auto Hack 11.00 PS4)",
-      "categoria": "pirateria_ps4",
+      "categorias": [
+        "serviciosplaystation"
+      ],
       "imagen": "imagenes/p4tool.jpg",
       "opciones": [
         {
