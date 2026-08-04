@@ -63,6 +63,9 @@ function guardarConfiguracionGitHub() {
   cargarDatosDesdeGitHub();
 }
 
+// Alias para evitar errores si en el HTML se llama guardarConfiguracion()
+window.guardarConfiguracion = guardarConfiguracionGitHub;
+
 // --- COMUNICACIÓN CON LA API DE GITHUB ---
 
 async function cargarDatosDesdeGitHub() {
