@@ -62,7 +62,7 @@ function renderProducts(lista) {
   
   container.innerHTML = '';
   
-  if (!lista || lista.length === 0) {
+  if (lista.length === 0) {
     container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No hay productos disponibles en esta categoría.</p>';
     return;
   }
@@ -78,10 +78,10 @@ function renderProducts(lista) {
     
     let selectedIndex = 0;
     let opcionesHTML = '';
-    let tieneOpciones = Array.isArray(p.opciones) && p.opciones.length > 0;
 
-    if (tieneOpciones) {
+    if (p.opciones && p.opciones.length > 0) {
       if (categoriaActual !== 'todos') {
+        // Buscar el índice de la opción que coincida con la categoría activa
         const indexCoincidente = p.opciones.findIndex(opc => {
           const opcNorm = normalizarTexto(opc.nombre);
           return (
@@ -95,25 +95,24 @@ function renderProducts(lista) {
         }
       }
 
+      // Renderizar el selector <select> estableciendo la opción seleccionada
       p.opciones.forEach((opc, idx) => {
         const isSelected = idx === selectedIndex ? 'selected' : '';
         opcionesHTML += `<option value="${idx}" ${isSelected}>${opc.nombre} - $${opc.precio} USD</option>`;
       });
     }
 
-    const precioInicial = tieneOpciones ? p.opciones[selectedIndex].precio : 0;
+    const precioInicial = p.opciones && p.opciones.length > 0 ? p.opciones[selectedIndex].precio : 0;
 
     card.innerHTML = `
       <img src="${p.imagen}" alt="${p.nombre}" onerror="this.onerror=null; this.src='https://via.placeholder.com/300x200?text=Portal+GamEstudio';">
       <h3>${p.nombre}</h3>
-      ${tieneOpciones ? `
-        <div class="option-select-container">
-          <label>Modalidad:</label>
-          <select id="select-opc-${p.id}" onchange="updateCardPrice(${p.id})">
-            ${opcionesHTML}
-          </select>
-        </div>
-      ` : '<p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">Sin modalidades adicionales</p>'}
+      <div class="option-select-container">
+        <label>Modalidad:</label>
+        <select id="select-opc-${p.id}" onchange="updateCardPrice(${p.id})">
+          ${opcionesHTML}
+        </select>
+      </div>
       <div class="price" id="price-display-${p.id}">$${precioInicial} USD</div>
       <button class="btn-add" onclick="addToCart(${p.id})">Añadir a la Cesta</button>
     `;
@@ -123,11 +122,8 @@ function renderProducts(lista) {
 
 function updateCardPrice(idProd) {
   const prod = productos.find(p => p.id === idProd);
-  const selectEl = document.getElementById(`select-opc-${idProd}`);
-  if (!prod || !selectEl || !prod.opciones) return;
-  
-  const selectIndex = selectEl.value;
-  const precioSel = prod.opciones[selectIndex] ? prod.opciones[selectIndex].precio : 0;
+  const selectIndex = document.getElementById(`select-opc-${idProd}`).value;
+  const precioSel = prod.opciones[selectIndex].precio;
   document.getElementById(`price-display-${idProd}`).innerText = `$${precioSel} USD`;
 }
 
@@ -151,36 +147,21 @@ function guardarCarrito() {
 
 function addToCart(idProd) {
   const prod = productos.find(p => p.id === idProd);
-  if (!prod) return;
-
-  const selectEl = document.getElementById(`select-opc-${idProd}`);
-  let modalidad = "Única";
-  let precio = 0;
-
-  if (selectEl && prod.opciones) {
-    const selectIndex = selectEl.value;
-    const opcionSeleccionada = prod.opciones[selectIndex];
-    if (opcionSeleccionada) {
-      modalidad = opcionSeleccionada.nombre;
-      precio = opcionSeleccionada.precio;
-    }
-  } else if (prod.opciones && prod.opciones.length > 0) {
-    modalidad = prod.opciones[0].nombre;
-    precio = prod.opciones[0].precio;
-  }
+  const selectIndex = document.getElementById(`select-opc-${idProd}`).value;
+  const opcionSeleccionada = prod.opciones[selectIndex];
 
   const itemCarrito = {
     idCart: Date.now() + Math.random(),
     nombre: prod.nombre,
-    modalidad: modalidad,
-    precio: precio
+    modalidad: opcionSeleccionada.nombre,
+    precio: opcionSeleccionada.precio
   };
 
   carrito.push(itemCarrito);
   guardarCarrito();
   updateCartUI();
 
-  showToast(`¡<strong>${prod.nombre}</strong> (${modalidad}) añadido a la cesta!`);
+  showToast(`¡<strong>${prod.nombre}</strong> (${opcionSeleccionada.nombre}) añadido a la cesta!`);
 }
 
 function removeFromCart(idCart) {
