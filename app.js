@@ -62,7 +62,7 @@ function renderProducts(lista) {
   
   container.innerHTML = '';
   
-  if (lista.length === 0) {
+  if (!lista || lista.length === 0) {
     container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No hay productos disponibles en esta categoría.</p>';
     return;
   }
@@ -217,6 +217,7 @@ function showToast(mensaje) {
 function toggleDeliveryAddress() {
   const deliveryType = document.getElementById('delivery-type').value;
   const addressGroup = document.getElementById('address-group');
+  if (!addressGroup) return;
   
   if (deliveryType === 'Domicilio') {
     addressGroup.style.display = 'block';
@@ -228,6 +229,7 @@ function toggleDeliveryAddress() {
 function toggleExchangeRateInput() {
   const metodo = document.getElementById('payment-method').value;
   const cupBox = document.getElementById('cup-conversion-box');
+  if (!cupBox) return;
 
   if (metodo.includes('CUP')) {
     cupBox.style.display = 'block';
@@ -248,6 +250,7 @@ function calculateCUPTotal() {
 
 function toggleCart() {
   const modal = document.getElementById('cart-modal');
+  if (!modal) return;
   modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
 }
 
@@ -269,7 +272,9 @@ function filterCategory(cat, element) {
 }
 
 function filterProducts() {
-  const text = normalizarTexto(document.getElementById('search-input').value);
+  const inputEl = document.getElementById('search-input');
+  if (!inputEl) return;
+  const text = normalizarTexto(inputEl.value);
   const filtrados = productos.filter(p => {
     const coincideNombre = normalizarTexto(p.nombre).includes(text);
     const perteneceCategoria = categoriaActual === 'todos' || (
@@ -282,11 +287,17 @@ function filterProducts() {
 }
 
 function sendWhatsAppOrder() {
-  const nombre = document.getElementById('client-name').value;
-  const telefono = document.getElementById('client-phone').value;
-  const deliveryType = document.getElementById('delivery-type').value;
-  const direccion = document.getElementById('client-address').value;
-  const metodoPago = document.getElementById('payment-method').value;
+  const nombreEl = document.getElementById('client-name');
+  const telefonoEl = document.getElementById('client-phone');
+  const deliveryTypeEl = document.getElementById('delivery-type');
+  const direccionEl = document.getElementById('client-address');
+  const metodoPagoEl = document.getElementById('payment-method');
+
+  const nombre = nombreEl ? nombreEl.value : '';
+  const telefono = telefonoEl ? telefonoEl.value : '';
+  const deliveryType = deliveryTypeEl ? deliveryTypeEl.value : 'Presencial';
+  const direccion = direccionEl ? direccionEl.value : '';
+  const metodoPago = metodoPagoEl ? metodoPagoEl.value : 'Efectivo';
 
   if (carrito.length === 0) return alert("Tu cesta está vacía");
   if (!nombre || !telefono) return alert("Por favor, completa tu nombre y teléfono de contacto.");
@@ -327,6 +338,26 @@ function sendWhatsAppOrder() {
 
   mensaje += `\n\n¿Me confirman la disponibilidad para procesar la orden?`;
 
+  // --- VACÍO Y LIMPIEZA DE CESTA TRAS ENVIAR EL PEDIDO ---
+  carrito = [];
+  guardarCarrito();
+  updateCartUI();
+
+  const modal = document.getElementById('cart-modal');
+  if (modal) modal.style.display = 'none';
+
   const url = `https://wa.me/${TELEFONO_WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
   window.open(url, '_blank');
 }
+
+// --- ASIGNACIÓN GLOBAL A WINDOW ---
+// Garantiza que las funciones llamadas desde eventos inline HTML (onclick, onchange) funcionen siempre
+window.filterCategory = filterCategory;
+window.filterProducts = filterProducts;
+window.updateCardPrice = updateCardPrice;
+window.addToCart = addToCart;
+window.removeFromCart = removeFromCart;
+window.toggleCart = toggleCart;
+window.toggleDeliveryAddress = toggleDeliveryAddress;
+window.toggleExchangeRateInput = toggleExchangeRateInput;
+window.sendWhatsAppOrder = sendWhatsAppOrder;
