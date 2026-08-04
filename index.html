@@ -3,89 +3,114 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portal GamEstudio | Tienda de Videojuegos</title>
+  <title>Portal GamEstudio - Tienda Digital</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Estilos base para el modal de la cesta */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: var(--bg-card, #1e1e2f);
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      border: 1px solid var(--border-color, #333);
+      position: relative;
+      color: var(--text-main, #fff);
+    }
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: var(--text-muted, #aaa);
+    }
+  </style>
 </head>
 <body>
 
   <header>
-    <div class="header-container">
+    <div class="header-container" style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px;">
       <h1>🎮 Portal GamEstudio</h1>
-      <div class="cart-btn" onclick="toggleCart()">
-        🛒 Cesta (<span id="cart-count">0</span>)
+      <div style="display:flex; gap:15px; align-items:center;">
+        <a href="admin.html" style="color: var(--accent-color, #00ff88); text-decoration: none; font-weight: bold;">⚙️ Admin Panel</a>
+        <button type="button" onclick="abrirModalCarrito()" style="position:relative; background:none; border:none; font-size:1.5rem; cursor:pointer;">
+          🛒 <span id="cart-count" style="display:none; position:absolute; top:-5px; right:-10px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:0.75rem; font-weight:bold;">0</span>
+        </button>
       </div>
     </div>
   </header>
 
-  <main class="main-container">
-    <!-- Buscador y Filtros por Categoría -->
-    <section class="controls">
-      <input type="text" id="search-input" placeholder="🔍 Buscar juego o servicio..." onkeyup="filterProducts()">
-      <div class="categories">
-        <button class="cat-btn active" onclick="filterCategory('todos')">Todos</button>
-        <button class="cat-btn" onclick="filterCategory('ps5')">PS5</button>
-        <button class="cat-btn" onclick="filterCategory('ps4')">PS4</button>
-        <button class="cat-btn" onclick="filterCategory('xbox')">Xbox</button>
-        <button class="cat-btn" onclick="filterCategory('pirateria_ps5')">Piratería PS5</button>
-        <button class="cat-btn" onclick="filterCategory('pirateria_ps4')">Piratería PS4</button>
-        <button class="cat-btn" onclick="filterCategory('perifericos')">Accesorios / Discos</button>
-        <button class="cat-btn" onclick="filterCategory('servicios')">Servicios Técnicos</button>
-      </div>
-    </section>
+  <main style="max-width: 1100px; margin: 20px auto; padding: 0 15px;">
+    <!-- Buscador -->
+    <div style="margin-bottom: 20px;">
+      <input type="text" id="search-input" placeholder="🔍 Buscar juegos, servicios o productos..." oninput="filtrarProductos()" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color, #333); background: var(--bg-card, #1e1e2f); color: #fff;">
+    </div>
 
-    <!-- Catálogo de Productos -->
-    <section id="product-grid" class="product-grid">
-      <!-- Los productos se cargan dinámicamente -->
-    </section>
+    <!-- Navegación por Categorías -->
+    <nav id="nav-categorias" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px;">
+      <!-- Se carga dinámicamente -->
+    </nav>
+
+    <!-- Catálogo -->
+    <div id="grid-productos" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
+      <!-- Se carga dinámicamente -->
+    </div>
   </main>
 
-  <!-- Modal del Carrito de Compras -->
-  <div id="cart-modal" class="cart-modal">
-    <div class="cart-content">
-      <h2>Tu Pedido</h2>
-      <ul id="cart-items" class="cart-list"></ul>
+  <!-- Modal Cesta de Compras -->
+  <div id="cart-modal" class="modal">
+    <div class="modal-content">
+      <button type="button" class="close-btn" onclick="cerrarModalCarrito()">×</button>
+      <h3>🛒 Tu Cesta de Compras</h3>
       
-      <!-- Desglose de Totales -->
-      <div class="cart-total">
-        <div style="font-size: 1.3rem;">Total: <strong>$<span id="cart-total-usd">0</span> USD</strong></div>
-        <div id="cup-conversion-box" style="display: none; margin-top: 5px; color: #00ff88; font-weight: bold;">
-          Equivalente a pagar: <span id="cart-total-cup">0</span> CUP
-        </div>
+      <div id="cart-items-container" style="margin: 20px 0;">
+        <!-- Elementos del carrito -->
       </div>
 
-      <div class="form-group">
-        <label>Tipo de Entrega:</label>
-        <select id="delivery-type" onchange="toggleDeliveryAddress()">
-          <option value="Tienda / Digital">En Tienda / Entrega Digital</option>
-          <option value="Domicilio">Envío a Domicilio</option>
-        </select>
-
-        <!-- Campo de Dirección (Solo visible si selecciona Domicilio) -->
-        <div id="address-group" style="display: none; margin-top: 10px;">
-          <label>Dirección de entrega (La Habana):</label>
-          <input type="text" id="client-address" placeholder="Ej: Calle 31 #4205 e/ 42 y 44, Marianao">
+      <div style="border-top: 1px solid var(--border-color, #333); padding-top: 15px; margin-top: 15px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span>Total en USD:</span>
+          <strong id="cart-total-usd">$0.00 USD</strong>
         </div>
 
-        <label style="margin-top: 10px;">Moneda y Método de Pago:</label>
-        <select id="payment-method" onchange="toggleExchangeRateInput()">
-          <option value="USD - Efectivo">Efectivo en USD ($)</option>
-          <option value="CUP - Transferencia">Transferencia en CUP (Transfermóvil / EnZona)</option>
-          <option value="CUP - Efectivo">Efectivo en CUP</option>
-        </select>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <label for="cart-currency-select">Moneda de Pago:</label>
+          <select id="cart-currency-select" onchange="calcularTotalConvertido()" style="padding: 5px; border-radius: 4px; background: var(--bg-primary, #121212); color: #fff; border: 1px solid var(--border-color, #333);">
+            <option value="USD">USD ($)</option>
+            <option value="CUP">CUP (₱)</option>
+            <option value="MLC">MLC ($)</option>
+          </select>
+        </div>
 
-        <label style="margin-top: 10px;">Nombre completo:</label>
-        <input type="text" id="client-name" placeholder="Ej: Carlos Pérez">
-        
-        <label>Teléfono de contacto:</label>
-        <input type="tel" id="client-phone" placeholder="Ej: 5351234567">
+        <div style="display: flex; justify-content: space-between; font-size: 1.1rem; color: var(--accent-color, #00ff88); font-weight: bold; margin-bottom: 20px;">
+          <span>Total Convertido:</span>
+          <span id="cart-total-convertido">0.00 USD</span>
+        </div>
+
+        <button type="button" class="btn-whatsapp" onclick="enviarPedidoWhatsApp(event)" style="width: 100%; padding: 12px; background: #25D366; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem;">
+          📲 Enviar Pedido por WhatsApp
+        </button>
       </div>
-
-      <button class="btn-whatsapp" onclick="sendWhatsAppOrder()">📲 Enviar Pedido por WhatsApp</button>
-      <button class="btn-close" onclick="toggleCart()">Cerrar</button>
     </div>
   </div>
 
-  <!-- Contenedor para notificaciones flotantes -->
   <div id="toast-container" class="toast-container"></div>
 
   <script src="app.js"></script>
