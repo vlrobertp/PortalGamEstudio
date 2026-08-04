@@ -8,7 +8,6 @@ let categorias = [];
 let carrito = [];
 let categoriaActual = 'todos';
 
-// Función para limpiar acentos y caracteres especiales
 function normalizarTexto(texto) {
   if (!texto) return '';
   return texto
@@ -19,7 +18,6 @@ function normalizarTexto(texto) {
     .trim();
 }
 
-// Cargar catálogo, categorías y Cesta guardada al iniciar
 document.addEventListener('DOMContentLoaded', () => {
   cargarCarritoGuardado();
 
@@ -287,10 +285,67 @@ function filterProducts() {
   renderProducts(filtrados);
 }
 
-function guardarPedidoEnHistorialLocal(nuevoPedido) {
+async function guardarPedidoEnHistorialLocal(nuevoPedido) {
+  // 1. Guardar localmente siempre
   let pedidos = JSON.parse(localStorage.getItem('portal_pedidos') || '[]');
   pedidos.unshift(nuevoPedido);
   localStorage.setItem('portal_pedidos', JSON.stringify(pedidos));
+
+  // 2. Intentar actualizar pedidos.json en GitHub si existen credenciales guardadas
+  const savedConfig = localStorage.getItem('portal_gh_config');
+  if (savedConfig) {
+    try {
+      const ghConfig = JSON.parse(savedConfig);
+      if (ghConfig.token && ghConfig.repo) {
+        await guardarPedidoEnGitHub(nuevoPedido, ghConfig);
+      }
+    } catch (e) {
+      console.warn("No se pudo sincronizar el pedido con GitHub API:", e);
+    }
+  }
+}
+
+async function guardarPedidoEnGitHub(nuevoPedido, config) {
+  const path = "pedidos.json";
+  const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${path}`;
+
+  let sha = null;
+  let pedidosExistentes = [];
+
+  try {
+    const getRes = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${config.token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if (getRes.ok) {
+      const getData = await getRes.json();
+      sha = getData.sha;
+      const content = decodeURIComponent(escape(atob(getData.content)));
+      pedidosExistentes = JSON.parse(content);
+    }
+  } catch (e) {}
+
+  pedidosExistentes.unshift(nuevoPedido);
+
+  const jsonString = JSON.stringify(pedidosExistentes, null, 2);
+  const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
+
+  await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${config.token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github.v3+json'
+    },
+    body: JSON.stringify({
+      message: `Nuevo pedido de ${nuevoPedido.cliente} (${nuevoPedido.id})`,
+      content: base64Content,
+      sha: sha || undefined
+    })
+  });
 }
 
 function sendWhatsAppOrder() {
