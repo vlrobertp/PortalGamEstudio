@@ -167,9 +167,11 @@
     },
     {
       "id": 7,
-      "nombre": "Funda de Silicona DualSense PS5 + Grips",
-      "categoria": "perifericos",
-      "imagen": "imagenes/funda_ps5.jpg",
+      "nombre": "Funda de silicona para mando Dualsense PS5 + funda de joysticks + cubierta protectora del táctil",
+      "categorias": [
+        "perifericos"
+      ],
+      "imagen": "./imagenes/1785825908021_mlm_product_cover.webp",
       "opciones": [
         {
           "nombre": "Accesorio Único",
