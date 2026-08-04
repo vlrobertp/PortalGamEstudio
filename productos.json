@@ -173,12 +173,12 @@
       "imagen": "./imagenes/1785725249117_images_-_2026-07-19t121412.207.jpeg",
       "opciones": [
         {
-          "nombre": "PS5 Inyección Permanente",
-          "precio": 45
-        },
-        {
           "nombre": "PS5 Inyección Perdible",
           "precio": 25
+        },
+        {
+          "nombre": "PS5 Inyección Permanente",
+          "precio": 45
         },
         {
           "nombre": "Xbox Series Inyección Perdible",
