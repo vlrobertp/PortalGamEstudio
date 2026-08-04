@@ -166,16 +166,27 @@
     {
       "id": 8,
       "nombre": "007 First Light",
-      "categoria": "ps5",
+      "categorias": [
+        "ps5inyeccion",
+        "xboxseries"
+      ],
       "imagen": "./imagenes/1785725249117_images_-_2026-07-19t121412.207.jpeg",
       "opciones": [
         {
-          "nombre": "Permanente",
+          "nombre": "PS5 Inyección Permanente",
           "precio": 45
         },
         {
-          "nombre": "Perdible",
+          "nombre": "PS5 Inyección Perdible",
           "precio": 25
+        },
+        {
+          "nombre": "Xbox Series Inyección Perdible",
+          "precio": 20
+        },
+        {
+          "nombre": "Xbox Series Inyección Permanente ",
+          "precio": 40
         }
       ]
     },
