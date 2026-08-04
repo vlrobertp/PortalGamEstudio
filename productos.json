@@ -153,7 +153,7 @@
       "categorias": [
         "serviciosplaystation"
       ],
-      "imagen": "./imagenes/1785825738919_r5a_product_cover.webp",
+      "imagen": "imagenes/ps5_unlock.jpg",
       "opciones": [
         {
           "nombre": "Paquete Básico 2 Juegos",
@@ -166,12 +166,24 @@
       ]
     },
     {
-      "id": 7,
-      "nombre": "Funda de silicona para mando Dualsense PS5 + funda de joysticks + cubierta protectora del táctil",
+      "id": 6,
+      "nombre": "P4Tool (Auto Hack 11.00 PS4)",
       "categorias": [
-        "perifericos"
+        "serviciosplaystation"
       ],
-      "imagen": "./imagenes/1785825908021_mlm_product_cover.webp",
+      "imagen": "imagenes/p4tool.jpg",
+      "opciones": [
+        {
+          "nombre": "Dispositivo Standard",
+          "precio": 35
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "nombre": "Funda de Silicona DualSense PS5 + Grips",
+      "categoria": "perifericos",
+      "imagen": "imagenes/funda_ps5.jpg",
       "opciones": [
         {
           "nombre": "Accesorio Único",
