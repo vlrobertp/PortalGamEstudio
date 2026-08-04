@@ -132,22 +132,6 @@
       ]
     },
     {
-      "id": 4,
-      "nombre": "EA Sports FC 26 + Gamepass (Xbox)",
-      "categoria": "xbox",
-      "imagen": "imagenes/fc26_xbox.jpg",
-      "opciones": [
-        {
-          "nombre": "Perdible",
-          "precio": 6
-        },
-        {
-          "nombre": "Permanente + Gamepass",
-          "precio": 12
-        }
-      ]
-    },
-    {
       "id": 5,
       "nombre": "Piratería o Desbloqueo PS5 (v12.70 o inf)",
       "categorias": [
