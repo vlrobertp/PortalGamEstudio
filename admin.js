@@ -19,7 +19,7 @@ function showToast(mensaje) {
 }
 
 // ==========================================================================
-// GESTIÓN DEL INVENTARIO DE PRODUCTOS
+// INVENTARIO DE PRODUCTOS
 // ==========================================================================
 
 function obtenerProductos() {
@@ -88,7 +88,7 @@ function eliminarProducto(id) {
 }
 
 // ==========================================================================
-// GESTIÓN DEL HISTORIAL DE PEDIDOS
+// HISTORIAL DE PEDIDOS
 // ==========================================================================
 
 function obtenerPedidos() {
@@ -107,45 +107,41 @@ function cargarPedidosUI() {
   tbody.innerHTML = '';
 
   if (pedidos.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 15px;">No hay pedidos registrados en la base local.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 15px;">No hay pedidos en el historial.</td></tr>`;
+    calcularEstadisticas([]);
     return;
   }
 
   pedidos.forEach(p => {
-    const itemsHTML = p.items.map(item => `• ${item.nombre} <small>(${item.modalidad})</small>`).join('<br>');
-    
-    // Colores indicadores por estado
-    let badgeColor = '#ffb703'; // pendiente (amarillo)
-    if (p.estado === 'pagado') badgeColor = '#00b4d8'; // pagado (azul)
-    if (p.estado === 'completado') badgeColor = '#00ff88'; // completado (verde)
+    const itemsHTML = p.items.map(i => `• ${i.nombre} <small>(${i.modalidad})</small>`).join('<br>');
+    const fechaFormatted = new Date(p.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' });
+
+    let colorEstado = '#ffb703'; // Pendiente
+    if (p.estado === 'pagado') colorEstado = '#00b4d8';
+    if (p.estado === 'completado') colorEstado = '#00ff88';
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>
-        <strong>${p.id}</strong><br>
-        <small style="color:var(--text-muted);">${p.fecha}</small>
-      </td>
-      <td>
-        <strong>${p.cliente}</strong><br>
-        <small style="color:var(--text-muted);">${p.telefono}</small><br>
-        <small>🚚 ${p.entrega}</small>
-      </td>
+      <td><strong>${p.id}</strong><br><small style="color:var(--text-muted);">${fechaFormatted}</small></td>
+      <td><strong>${p.cliente}</strong><br><small style="color:var(--text-muted);">${p.telefono}</small></td>
       <td>${itemsHTML}</td>
       <td><strong>$${p.totalUSD} USD</strong><br><small style="color:var(--text-muted);">${p.metodoPago}</small></td>
       <td>
-        <select onchange="cambiarEstadoPedido('${p.id}', this.value)" style="padding: 4px; border-radius: 4px; background: var(--bg-primary); color: ${badgeColor}; border: 1px solid ${badgeColor}; font-weight: bold;">
+        <select onchange="cambiarEstadoPedido('${p.id}', this.value)" style="padding: 4px; border-radius: 4px; background: var(--bg-primary); color: ${colorEstado}; border: 1px solid ${colorEstado}; font-weight: bold;">
           <option value="pendiente" ${p.estado === 'pendiente' ? 'selected' : ''}>⏳ Pendiente</option>
           <option value="pagado" ${p.estado === 'pagado' ? 'selected' : ''}>💳 Pagado</option>
           <option value="completado" ${p.estado === 'completado' ? 'selected' : ''}>✅ Completado</option>
         </select>
       </td>
       <td>
-        <button class="btn-small" style="background:#ffb703; color:#000; border:none; margin-bottom: 2px;" onclick="editarPedidoModal('${p.id}')">✏️</button>
+        <button class="btn-small" style="background:#ffb703; color:#000; border:none;" onclick="editarPedido('${p.id}')">✏️</button>
         <button class="btn-small" style="background:#ff4757; color:#fff; border:none;" onclick="eliminarPedido('${p.id}')">🗑️</button>
       </td>
     `;
     tbody.appendChild(tr);
   });
+
+  calcularEstadisticas(pedidos);
 }
 
 function cambiarEstadoPedido(orderId, nuevoEstado) {
@@ -155,46 +151,84 @@ function cambiarEstadoPedido(orderId, nuevoEstado) {
     pedidos[idx].estado = nuevoEstado;
     guardarPedidos(pedidos);
     cargarPedidosUI();
-    showToast(`Pedido ${orderId} actualizado a "${nuevoEstado}".`);
+    showToast(`Pedido ${orderId} actualizado.`);
   }
 }
 
-function editarPedidoModal(orderId) {
+function editarPedido(orderId) {
   let pedidos = obtenerPedidos();
   const p = pedidos.find(item => item.id === orderId);
   if (!p) return;
 
-  const nuevoNombre = prompt("Editar nombre del cliente:", p.cliente);
-  if (nuevoNombre === null) return;
+  const nuevoNombre = prompt("Nombre del cliente:", p.cliente);
+  const nuevoTel = prompt("Teléfono del cliente:", p.telefono);
 
-  const nuevoTelefono = prompt("Editar teléfono de contacto:", p.telefono);
-  if (nuevoTelefono === null) return;
-
-  p.cliente = nuevoNombre.trim() || p.cliente;
-  p.telefono = nuevoTelefono.trim() || p.telefono;
+  if (nuevoNombre !== null) p.cliente = nuevoNombre.trim();
+  if (nuevoTel !== null) p.telefono = nuevoTel.trim();
 
   guardarPedidos(pedidos);
   cargarPedidosUI();
-  showToast("Datos del pedido actualizados.");
+  showToast("Pedido modificado.");
 }
 
 function eliminarPedido(orderId) {
-  if (!confirm(`¿Deseas eliminar permanentemente el pedido ${orderId}?`)) return;
-
+  if (!confirm(`¿Eliminar pedido ${orderId}?`)) return;
   let pedidos = obtenerPedidos();
   pedidos = pedidos.filter(p => p.id !== orderId);
   guardarPedidos(pedidos);
   cargarPedidosUI();
-  showToast("Pedido eliminado del historial.");
+  showToast("Pedido eliminado.");
 }
 
-function exportarPedidosJSON() {
-  const pedidos = obtenerPedidos();
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(pedidos, null, 2));
-  const downloadAnchor = document.createElement('a');
-  downloadAnchor.setAttribute("href", dataStr);
-  downloadAnchor.setAttribute("download", `pedidos_portal_gamestudio_${Date.now()}.json`);
-  document.body.appendChild(downloadAnchor);
-  downloadAnchor.click();
-  downloadAnchor.remove();
+// ==========================================================================
+// CÁLCULO DE ESTADÍSTICAS (Semanal, Mensual y Anual)
+// ==========================================================================
+
+function calcularEstadisticas(pedidos) {
+  const ahora = new Date();
+  
+  // Inicio semana (Lunes)
+  const inicioSemana = new Date(ahora);
+  const diaSemana = ahora.getDay() || 7; 
+  inicioSemana.setDate(ahora.getDate() - diaSemana + 1);
+  inicioSemana.setHours(0, 0, 0, 0);
+
+  // Inicio mes
+  const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+
+  // Inicio año
+  const inicioAnio = new Date(ahora.getFullYear(), 0, 1);
+
+  let totalSemana = 0, cantSemana = 0;
+  let totalMes = 0, cantMes = 0;
+  let totalAnio = 0, cantAnio = 0;
+
+  pedidos.forEach(p => {
+    // Suma solo las ventas efectivamente cobradas/completadas
+    if (p.estado === 'pagado' || p.estado === 'completado') {
+      const fechaPedido = new Date(p.fecha);
+
+      if (fechaPedido >= inicioSemana) {
+        totalSemana += p.totalUSD;
+        cantSemana++;
+      }
+      if (fechaPedido >= inicioMes) {
+        totalMes += p.totalUSD;
+        cantMes++;
+      }
+      if (fechaPedido >= inicioAnio) {
+        totalAnio += p.totalUSD;
+        cantAnio++;
+      }
+    }
+  });
+
+  document.getElementById('stat-semana').textContent = `$${totalSemana} USD`;
+  document.getElementById('stat-semana-cant').textContent = `${cantSemana} pedido(s) cobrado(s)`;
+
+  document.getElementById('stat-mes').textContent = `$${totalMes} USD`;
+  document.getElementById('stat-mes-cant').textContent = `${cantMes} pedido(s) cobrado(s)`;
+
+  document.getElementById('stat-anio').textContent = `$${totalAnio} USD`;
+  document.getElementById('stat-anio-cant').textContent = `${cantAnio} pedido(s) cobrado(s)`;
 }
