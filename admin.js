@@ -59,8 +59,26 @@ function cargarConfiguracion() {
 
 function cargarPedidos() {
   pedidosAdmin = JSON.parse(localStorage.getItem('portal_pedidos') || '[]');
-  renderPedidosTable(pedidosAdmin);
-  calcularEstadisticas();
+  
+  fetch('pedidos.json')
+    .then(res => res.json())
+    .then(data => {
+      if (Array.isArray(data)) {
+        const idsExistentes = new Set(pedidosAdmin.map(p => p.id));
+        data.forEach(p => {
+          if (!idsExistentes.has(p.id)) {
+            pedidosAdmin.push(p);
+          }
+        });
+        pedidosAdmin.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+      }
+      renderPedidosTable(pedidosAdmin);
+      calcularEstadisticas();
+    })
+    .catch(() => {
+      renderPedidosTable(pedidosAdmin);
+      calcularEstadisticas();
+    });
 }
 
 function guardarPedidosLocal() {
