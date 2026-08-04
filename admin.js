@@ -1,431 +1,399 @@
-let productosAdmin = [];
-let categoriasAdmin = [
-  { id: "ps5", nombre: "PS5" },
-  { id: "ps4", nombre: "PS4" },
-  { id: "xbox", nombre: "Xbox" },
-  { id: "pirateria_ps5", nombre: "Piratería PS5" },
-  { id: "pirateria_ps4", nombre: "Piratería PS4" },
-  { id: "perifericos", nombre: "Accesorios / Discos" },
-  { id: "servicios", nombre: "Servicios Técnicos" }
-];
+// CONFIGURACIÓN DE GITHUB API Y ESTADO LOCAL
+const STORAGE_KEY_TOKEN = 'portal_admin_github_token';
+const STORAGE_KEY_REPO = 'portal_admin_github_repo'; // Formato: "usuario/repositorio"
 
-let ghConfig = { user: '', repo: '', token: '' };
+let GITHUB_TOKEN = localStorage.getItem(STORAGE_KEY_TOKEN) || '';
+let GITHUB_REPO = localStorage.getItem(STORAGE_KEY_REPO) || ''; // ej: "tu-usuario/portal-gamestudio"
+let FILE_PATH = 'productos.json';
 
+let productosData = {
+  categorias: [],
+  productos: []
+};
+let fileSHA = ''; // Requerido por la API de GitHub para actualizar archivos existentes
+let productoEditandoId = null;
+
+// INICIALIZACIÓN AL CARGAR LA PÁGINA
 document.addEventListener('DOMContentLoaded', () => {
-  cargarConfiguracion();
-  cargarProductosDesdeJSON();
-  addOpcionRow("Permanente", 20);
+  initAuthUI();
+  if (GITHUB_TOKEN && GITHUB_REPO) {
+    cargarDatosDesdeGitHub();
+  }
 });
 
-// 1. Guardar y Cargar Configuración
-function guardarConfiguracion() {
-  let userRaw = document.getElementById('gh-user').value.trim();
-  ghConfig.user = userRaw.startsWith('@') ? userRaw.substring(1) : userRaw;
-  ghConfig.repo = document.getElementById('gh-repo').value.trim();
-  ghConfig.token = document.getElementById('gh-token').value.trim();
+// --- GESTIÓN DE AUTENTICACIÓN Y CONFIGURACIÓN ---
 
-  document.getElementById('gh-user').value = ghConfig.user;
-  localStorage.setItem('portal_gh_config', JSON.stringify(ghConfig));
-  
-  const statusEl = document.getElementById('config-status');
-  statusEl.innerText = "✅ Configuración guardada";
-  statusEl.style.color = "#00ff88";
-}
+function initAuthUI() {
+  const tokenInput = document.getElementById('github-token');
+  const repoInput = document.getElementById('github-repo');
+  const authStatus = document.getElementById('auth-status');
 
-function cargarConfiguracion() {
-  const saved = localStorage.getItem('portal_gh_config');
-  if (saved) {
-    ghConfig = JSON.parse(saved);
-    if (ghConfig.user && ghConfig.user.startsWith('@')) {
-      ghConfig.user = ghConfig.user.substring(1);
+  if (tokenInput) tokenInput.value = GITHUB_TOKEN;
+  if (repoInput) repoInput.value = GITHUB_REPO;
+
+  if (GITHUB_TOKEN && GITHUB_REPO) {
+    if (authStatus) {
+      authStatus.innerText = "Conectado a GitHub";
+      authStatus.style.color = "#4CAF50";
     }
-    document.getElementById('gh-user').value = ghConfig.user || '';
-    document.getElementById('gh-repo').value = ghConfig.repo || '';
-    document.getElementById('gh-token').value = ghConfig.token || '';
+  } else {
+    if (authStatus) {
+      authStatus.innerText = "Sin configurar (ingresa tu Token y Repositorio)";
+      authStatus.style.color = "#FF9800";
+    }
   }
 }
 
-// 2. Cargar Catálogo y Categorías
-function cargarProductosDesdeJSON() {
-  fetch('productos.json')
-    .then(res => res.json())
-    .then(data => {
-      if (Array.isArray(data)) {
-        productosAdmin = data;
-      } else {
-        productosAdmin = data.productos || [];
-        if (data.categorias && data.categorias.length > 0) {
-          categoriasAdmin = data.categorias;
-        }
+function guardarConfiguracionGitHub() {
+  const tokenInput = document.getElementById('github-token').value.trim();
+  const repoInput = document.getElementById('github-repo').value.trim();
+
+  if (!tokenInput || !repoInput) {
+    alert("Por favor, ingresa tanto el Token como el Repositorio (usuario/repo).");
+    return;
+  }
+
+  GITHUB_TOKEN = tokenInput;
+  GITHUB_REPO = repoInput;
+
+  localStorage.setItem(STORAGE_KEY_TOKEN, GITHUB_TOKEN);
+  localStorage.setItem(STORAGE_KEY_REPO, GITHUB_REPO);
+
+  initAuthUI();
+  cargarDatosDesdeGitHub();
+}
+
+// --- COMUNICACIÓN CON LA API DE GITHUB ---
+
+async function cargarDatosDesdeGitHub() {
+  mostrarCargando(true);
+  try {
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`;
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
       }
-      renderCategoriasUI();
-      renderAdminTable(productosAdmin);
-    })
-    .catch(err => console.error("Error al cargar productos.json:", err));
-}
-
-// 3. Renderizar Categorías en la Interfaz
-function renderCategoriasUI() {
-  const tagContainer = document.getElementById('categorias-tag-list');
-  if (tagContainer) {
-    tagContainer.innerHTML = '';
-    categoriasAdmin.forEach(cat => {
-      const tag = document.createElement('span');
-      tag.style.cssText = 'background: var(--bg-primary); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 15px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;';
-      tag.innerHTML = `
-        <strong>${cat.nombre}</strong> <small style="color:var(--text-muted);">(${cat.id})</small>
-        <button onclick="eliminarCategoria('${cat.id}')" style="background:none; border:none; color:var(--danger-color); cursor:pointer; font-weight:bold; font-size:1rem; margin-left:4px;">×</button>
-      `;
-      tagContainer.appendChild(tag);
     });
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP ${response.status}: No se pudo obtener ${FILE_PATH}`);
+    }
+
+    const fileData = await response.json();
+    fileSHA = fileData.sha;
+
+    // Decodificar contenido en base64 con soporte para UTF-8 (tildes, caracteres especiales)
+    const jsonText = decodeURIComponent(escape(atob(fileData.content.replace(/\s/g, ''))));
+    const data = JSON.parse(jsonText);
+
+    if (Array.isArray(data)) {
+      productosData = { categorias: [], productos: data };
+    } else {
+      productosData = {
+        categorias: data.categorias || [],
+        productos: data.productos || []
+      };
+    }
+
+    renderizarSelectCategorias();
+    renderizarListaProductos(productosData.productos);
+    mostrarToast("Datos cargados con éxito desde GitHub.");
+  } catch (error) {
+    console.error("Error al cargar productos desde GitHub:", error);
+    alert(`Error al cargar los datos: ${error.message}`);
+  } finally {
+    mostrarCargando(false);
+  }
+}
+
+async function guardarCambiosEnGitHub(mensajeCommit) {
+  if (!GITHUB_TOKEN || !GITHUB_REPO) {
+    alert("Configura tu Token y Repositorio antes de guardar cambios.");
+    return false;
   }
 
-  const checkContainer = document.getElementById('categories-checkbox-container');
-  if (checkContainer) {
-    checkContainer.innerHTML = '';
-    categoriasAdmin.forEach(cat => {
-      const label = document.createElement('label');
-      label.style.cssText = 'display: inline-flex; align-items: center; gap: 5px; font-size: 0.85rem; cursor: pointer; background: var(--bg-card); padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border-color);';
-      label.innerHTML = `
-        <input type="checkbox" name="prod-cat-check" value="${cat.id}">
-        ${cat.nombre}
-      `;
-      checkContainer.appendChild(label);
+  mostrarCargando(true);
+  try {
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`;
+    
+    // Obtener SHA actual antes de escribir para evitar conflictos
+    const getRes = await fetch(url, {
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
     });
+
+    if (!getRes.ok) {
+      const errData = await getRes.json();
+      throw new Error(`[HTTP ${getRes.status}] No se encontró productos.json: ${errData.message}`);
+    }
+
+    const currentFileData = await getRes.json();
+    fileSHA = currentFileData.sha;
+
+    // Convertir objeto a JSON string y luego a base64 (UTF-8)
+    const jsonString = JSON.stringify(productosData, null, 2);
+    const contentBase64 = btoa(unescape(encodeURIComponent(jsonString)));
+
+    const bodyData = {
+      message: mensajeCommit || "Actualización de productos vía Panel de Administración",
+      content: contentBase64,
+      sha: fileSHA
+    };
+
+    const putRes = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.github.v3+json'
+      },
+      body: JSON.stringify(bodyData)
+    });
+
+    if (!putRes.ok) {
+      const putErr = await putRes.json();
+      throw new Error(`[HTTP ${putRes.status}] Error al actualizar: ${putErr.message}`);
+    }
+
+    const result = await putRes.json();
+    fileSHA = result.content.sha;
+
+    mostrarToast("¡Cambios guardados exitosamente en GitHub!");
+    return true;
+  } catch (error) {
+    console.error("Error al guardar en GitHub:", error);
+    alert(`Error al guardar en GitHub: ${error.message}`);
+    return false;
+  } finally {
+    mostrarCargando(false);
   }
 }
 
-async function agregarCategoria() {
-  const idInput = document.getElementById('new-cat-id');
-  const nameInput = document.getElementById('new-cat-name');
-  
-  const id = idInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-  const nombre = nameInput.value.trim();
+// --- RENDERIZADO Y BUSCADOR EN EL PANEL ---
 
-  if (!id || !nombre) {
-    alert("Por favor completa el ID corto y el Nombre de la categoría.");
-    return;
-  }
+function renderizarSelectCategorias() {
+  const selectCat = document.getElementById('producto-categoria');
+  if (!selectCat) return;
 
-  if (categoriasAdmin.some(c => c.id === id)) {
-    alert("Ya existe una categoría con ese ID.");
-    return;
-  }
-
-  categoriasAdmin.push({ id, nombre });
-  renderCategoriasUI();
-
-  idInput.value = '';
-  nameInput.value = '';
-
-  try {
-    showToast("Guardando nueva categoría en GitHub...");
-    await updateJSONInGitHub({ categorias: categoriasAdmin, productos: productosAdmin });
-    showToast("Categoría agregada con éxito.");
-  } catch (err) {
-    alert("Error al guardar categoría: " + err.message);
-  }
+  selectCat.innerHTML = '<option value="">Seleccionar Categoría</option>';
+  productosData.categorias.forEach(cat => {
+    selectCat.innerHTML += `<option value="${cat.id}">${cat.nombre}</option>`;
+  });
 }
 
-async function eliminarCategoria(catId) {
-  if (!confirm(`¿Eliminar la categoría "${catId}"?`)) return;
+function renderizarListaProductos(lista) {
+  const container = document.getElementById('admin-product-list');
+  if (!container) return;
 
-  categoriasAdmin = categoriasAdmin.filter(c => c.id !== catId);
-  renderCategoriasUI();
+  container.innerHTML = '';
 
-  try {
-    showToast("Guardando cambios en GitHub...");
-    await updateJSONInGitHub({ categorias: categoriasAdmin, productos: productosAdmin });
-    showToast("Categoría eliminada.");
-  } catch (err) {
-    alert("Error al eliminar categoría: " + err.message);
-  }
-}
-
-// 4. Render Tabla de Productos y Búsqueda en Vivo
-function renderAdminTable(lista = productosAdmin) {
-  const tbody = document.getElementById('admin-product-list');
-  tbody.innerHTML = '';
-
-  if (lista.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 15px;">No se encontraron productos.</td></tr>`;
+  if (!lista || lista.length === 0) {
+    container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">No se encontraron productos.</td></tr>';
     return;
   }
 
-  lista.forEach(p => {
-    const catsArray = Array.isArray(p.categorias) ? p.categorias : [p.categoria || 'sin_categoria'];
-    const badgesHTML = catsArray.map(c => `<span class="badge">${c}</span>`).join(' ');
+  lista.forEach(prod => {
+    let modalidadesText = 'Sin modalidades';
+    if (Array.isArray(prod.opciones) && prod.opciones.length > 0) {
+      modalidadesText = prod.opciones.map(o => `${o.nombre} ($${o.precio})`).join('<br>');
+    }
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><img src="${p.imagen}" onerror="this.src='https://via.placeholder.com/40';"></td>
-      <td><strong>${p.nombre}</strong></td>
-      <td>${badgesHTML}</td>
+      <td><img src="${prod.imagen}" width="50" height="50" style="object-fit:cover; border-radius:4px;" onerror="this.src='https://via.placeholder.com/50';"></td>
+      <td><strong>${prod.nombre}</strong></td>
+      <td>${prod.categoria || (prod.categorias ? prod.categorias.join(', ') : 'N/A')}</td>
+      <td><small>${modalidadesText}</small></td>
       <td>
-        <button class="btn-small" style="background:#ffb703; color:#000; border:none;" onclick="editarProducto(${p.id})">✏️</button>
-        <button class="btn-small" style="background:#ff4757; color:#fff; border:none;" onclick="eliminarProducto(${p.id})">🗑️</button>
+        <button class="btn-edit" onclick="cargarProductoEnFormulario(${prod.id})">✏️ Editar</button>
+        <button class="btn-delete" onclick="eliminarProducto(${prod.id})">🗑️ Eliminar</button>
       </td>
     `;
-    tbody.appendChild(tr);
+    container.appendChild(tr);
   });
 }
 
-function filtrarTablaAdmin() {
+function filtrarProductosAdmin() {
   const query = document.getElementById('admin-search-input').value.toLowerCase().trim();
-  
-  const filtrados = productosAdmin.filter(p => {
-    const coincideNombre = p.nombre.toLowerCase().includes(query);
-    const catsArray = Array.isArray(p.categorias) ? p.categorias : [p.categoria || ''];
-    const coincideCategoria = catsArray.some(c => c.toLowerCase().includes(query));
-    
-    return coincideNombre || coincideCategoria;
+  const filtrados = productosData.productos.filter(p => {
+    const nombreMatch = p.nombre.toLowerCase().includes(query);
+    const catMatch = (p.categoria && p.categoria.toLowerCase().includes(query)) ||
+                     (Array.isArray(p.categorias) && p.categorias.some(c => c.toLowerCase().includes(query)));
+    return nombreMatch || catMatch;
   });
-
-  renderAdminTable(filtrados);
+  renderizarListaProductos(filtrados);
 }
 
-function addOpcionRow(nombre = '', precio = '') {
+// --- GESTIÓN DE MODALIDADES EN EL FORMULARIO ---
+
+function agregarCampoOpcion(nombre = '', precio = '') {
   const container = document.getElementById('opciones-container');
+  if (!container) return;
+
   const div = document.createElement('div');
   div.className = 'opcion-row';
+  div.style.display = 'flex';
+  div.style.gap = '8px';
+  div.style.marginBottom = '8px';
+
   div.innerHTML = `
-    <input type="text" placeholder="Ej: Perdible / Cuenta" value="${nombre}" class="opc-nombre" required>
-    <input type="number" placeholder="Precio ($ USD)" value="${precio}" class="opc-precio" style="width: 120px;" required>
-    <button type="button" class="btn-small" style="background:#ff4757; color:#fff; border:none;" onclick="this.parentElement.remove()">❌</button>
+    <input type="text" placeholder="Nombre (ej: Primaria PS5)" value="${nombre}" class="opcion-nombre" required style="flex:2;">
+    <input type="number" placeholder="Precio ($ USD)" value="${precio}" class="opcion-precio" step="0.01" required style="flex:1;">
+    <button type="button" onclick="this.parentElement.remove()" style="background:#ff4444; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">X</button>
   `;
   container.appendChild(div);
 }
 
-// 5. Guardar / Publicar Producto
-async function guardarProducto() {
-  if (ghConfig.user.startsWith('@')) {
-    ghConfig.user = ghConfig.user.substring(1);
-  }
+function obtenerOpcionesDelFormulario() {
+  const filas = document.querySelectorAll('#opciones-container .opcion-row');
+  const opciones = [];
 
-  if (!ghConfig.token || !ghConfig.user || !ghConfig.repo) {
-    alert("Por favor, completa y guarda primero los datos de configuración de GitHub.");
-    return;
-  }
+  filas.forEach(fila => {
+    const nombre = fila.querySelector('.opcion-nombre').value.trim();
+    const precio = parseFloat(fila.querySelector('.opcion-precio').value);
 
-  const idEdit = document.getElementById('prod-id').value;
-  const nombre = document.getElementById('prod-nombre').value;
-  const fileInput = document.getElementById('prod-file');
-
-  const checkboxes = document.querySelectorAll('input[name="prod-cat-check"]:checked');
-  let categoriasSeleccionadas = Array.from(checkboxes).map(cb => cb.value);
-
-  if (categoriasSeleccionadas.length === 0) {
-    alert("Debes seleccionar al menos una categoría para el producto.");
-    return;
-  }
-  
-  const opcNombres = document.querySelectorAll('.opc-nombre');
-  const opcPrecios = document.querySelectorAll('.opc-precio');
-  let opciones = [];
-  
-  opcNombres.forEach((input, i) => {
-    opciones.push({
-      nombre: input.value,
-      precio: parseFloat(opcPrecios[i].value) || 0
-    });
+    if (nombre && !isNaN(precio)) {
+      opciones.push({ nombre, precio });
+    }
   });
 
-  const btnSubmit = document.getElementById('btn-submit');
-  btnSubmit.disabled = true;
-  btnSubmit.innerText = "⏳ Subiendo a GitHub...";
+  return opciones;
+}
 
-  try {
-    let rutaImagen = "./imagenes/placeholder.jpg";
+// --- GUARDAR / EDITAR / ELIMINAR PRODUCTOS ---
 
-    if (fileInput.files.length > 0) {
-      const file = fileInput.files[0];
-      const cleanFileName = file.name.toLowerCase().replace(/[^a-z0-9.]/g, '_');
-      const fileName = `${Date.now()}_${cleanFileName}`;
-      rutaImagen = `./imagenes/${fileName}`;
+async function guardarProductoFormulario(e) {
+  if (e) e.preventDefault();
 
-      showToast("Subiendo imagen...");
-      await uploadFileToGitHub(`imagenes/${fileName}`, file);
-    } else if (idEdit) {
-      const prodExistente = productosAdmin.find(p => p.id === parseInt(idEdit));
-      if (prodExistente) rutaImagen = prodExistente.imagen;
-    }
+  const nombre = document.getElementById('producto-nombre').value.trim();
+  const imagen = document.getElementById('producto-imagen').value.trim();
+  const categoria = document.getElementById('producto-categoria').value;
+  const opciones = obtenerOpcionesDelFormulario();
 
-    if (idEdit) {
-      const idx = productosAdmin.findIndex(p => p.id === parseInt(idEdit));
-      productosAdmin[idx] = { 
-        id: parseInt(idEdit), 
-        nombre, 
-        categorias: categoriasSeleccionadas, 
-        imagen: rutaImagen, 
-        opciones 
+  if (!nombre || !imagen || !categoria) {
+    alert("Por favor completa los campos de Nombre, Imagen y Categoría.");
+    return;
+  }
+
+  if (opciones.length === 0) {
+    alert("Agrega al menos una modalidad / opción con precio.");
+    return;
+  }
+
+  if (productoEditandoId !== null) {
+    // Editar existente
+    const index = productosData.productos.findIndex(p => p.id === productoEditandoId);
+    if (index !== -1) {
+      productosData.productos[index] = {
+        id: productoEditandoId,
+        nombre,
+        imagen,
+        categoria,
+        opciones
       };
-    } else {
-      const newId = productosAdmin.length > 0 ? Math.max(...productosAdmin.map(p => p.id)) + 1 : 1;
-      productosAdmin.push({ 
-        id: newId, 
-        nombre, 
-        categorias: categoriasSeleccionadas, 
-        imagen: rutaImagen, 
-        opciones 
-      });
     }
+  } else {
+    // Crear nuevo
+    const nuevoId = productosData.productos.length > 0 
+      ? Math.max(...productosData.productos.map(p => p.id || 0)) + 1 
+      : 1;
 
-    showToast("Actualizando productos.json en GitHub...");
-    await updateJSONInGitHub({ categorias: categoriasAdmin, productos: productosAdmin });
-
-    showToast("¡Publicación exitosa!");
-    filtrarTablaAdmin();
-    resetForm();
-
-  } catch (err) {
-    alert("Error al conectar con la API de GitHub: " + err.message);
-  } finally {
-    btnSubmit.disabled = false;
-    btnSubmit.innerText = "🚀 Publicar en GitHub";
-  }
-}
-
-// 6. Subida de Archivos y API GitHub
-async function uploadFileToGitHub(path, file) {
-  const base64Content = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]);
-    reader.onerror = error => reject(error);
-    reader.readAsDataURL(file);
-  });
-
-  const url = `https://api.github.com/repos/${ghConfig.user}/${ghConfig.repo}/contents/${path}`;
-  
-  let sha = null;
-  try {
-    const getRes = await fetch(url, { 
-      headers: { 
-        'Authorization': `Bearer ${ghConfig.token}`,
-        'Accept': 'application/vnd.github.v3+json'
-      } 
+    productosData.productos.push({
+      id: nuevoId,
+      nombre,
+      imagen,
+      categoria,
+      opciones
     });
-    if (getRes.ok) {
-      const getData = await getRes.json();
-      sha = getData.sha;
-    }
-  } catch (e) {}
+  }
 
-  const body = {
-    message: `Añadida imagen: ${path} desde Panel Admin`,
-    content: base64Content
-  };
-  if (sha) body.sha = sha;
+  const exito = await guardarCambiosEnGitHub(
+    productoEditandoId !== null ? `Editar producto: ${nombre}` : `Nuevo producto: ${nombre}`
+  );
 
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${ghConfig.token}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.github.v3+json'
-    },
-    body: JSON.stringify(body)
-  });
-
-  if (!res.ok) {
-    const errData = await res.json();
-    throw new Error(`[HTTP ${res.status}] ${errData.message || 'No se pudo subir la imagen'}`);
+  if (exito) {
+    limpiarFormulario();
+    renderizarListaProductos(productosData.productos);
   }
 }
 
-async function updateJSONInGitHub(contentObject) {
-  const path = "productos.json";
-  const url = `https://api.github.com/repos/${ghConfig.user}/${ghConfig.repo}/contents/${path}`;
+function cargarProductoEnFormulario(id) {
+  const prod = productosData.productos.find(p => p.id === id);
+  if (!prod) return;
 
-  const getRes = await fetch(url, { 
-    headers: { 
-      'Authorization': `Bearer ${ghConfig.token}`,
-      'Accept': 'application/vnd.github.v3+json'
-    } 
-  });
-  
-  if (!getRes.ok) {
-    const errData = await res.json();
-    throw new Error(`[HTTP ${res.status}] No se encontró productos.json: ${errData.message}`);
-  }
-
-  const getData = await getRes.json();
-  const sha = getData.sha;
-
-  const jsonString = JSON.stringify(contentObject, null, 2);
-  const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
-
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${ghConfig.token}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.github.v3+json'
-    },
-    body: JSON.stringify({
-      message: `Actualizado catálogo y categorías desde Panel Admin`,
-      content: base64Content,
-      sha: sha
-    })
-  });
-
-  if (!res.ok) {
-    const errData = await res.json();
-    throw new Error(`[HTTP ${res.status}] ${errData.message || 'No se pudo actualizar productos.json'}`);
-  }
-}
-
-function editarProducto(id) {
-  const p = productosAdmin.find(item => item.id === id);
-  if (!p) return;
-
-  document.getElementById('prod-id').value = p.id;
-  document.getElementById('prod-nombre').value = p.nombre;
-  document.getElementById('form-title').innerText = "✏️ Editar Producto";
-
-  const catsArray = Array.isArray(p.categorias) ? p.categorias : [p.categoria];
-  const checkboxes = document.querySelectorAll('input[name="prod-cat-check"]');
-  checkboxes.forEach(cb => {
-    cb.checked = catsArray.includes(cb.value);
-  });
+  productoEditandoId = prod.id;
+  document.getElementById('producto-nombre').value = prod.nombre;
+  document.getElementById('producto-imagen').value = prod.imagen;
+  document.getElementById('producto-categoria').value = prod.categoria || (prod.categorias ? prod.categorias[0] : '');
 
   const container = document.getElementById('opciones-container');
-  container.innerHTML = '';
-  p.opciones.forEach(opc => addOpcionRow(opc.nombre, opc.precio));
+  if (container) container.innerHTML = '';
 
+  if (Array.isArray(prod.opciones) && prod.opciones.length > 0) {
+    prod.opciones.forEach(opc => agregarCampoOpcion(opc.nombre, opc.precio));
+  } else {
+    agregarCampoOpcion();
+  }
+
+  const btnSubmit = document.getElementById('btn-guardar-producto');
+  if (btnSubmit) btnSubmit.innerText = "💾 Actualizar Producto";
+  
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function eliminarProducto(id) {
-  if (!confirm("¿Seguro que deseas eliminar este producto?")) return;
+  const prod = productosData.productos.find(p => p.id === id);
+  if (!prod) return;
 
-  productosAdmin = productosAdmin.filter(p => p.id !== id);
-  try {
-    showToast("Guardando cambios en GitHub...");
-    await updateJSONInGitHub({ categorias: categoriasAdmin, productos: productosAdmin });
-    filtrarTablaAdmin();
-    showToast("Producto eliminado correctamente.");
-  } catch (e) {
-    alert("Error al eliminar: " + e.message);
+  if (!confirm(`¿Estás seguro de que deseas eliminar "${prod.nombre}"?`)) {
+    return;
+  }
+
+  productosData.productos = productosData.productos.filter(p => p.id !== id);
+
+  const exito = await guardarCambiosEnGitHub(`Eliminar producto ID ${id}: ${prod.nombre}`);
+  if (exito) {
+    renderizarListaProductos(productosData.productos);
   }
 }
 
-function resetForm() {
-  document.getElementById('product-form').reset();
-  document.getElementById('prod-id').value = '';
-  document.getElementById('form-title').innerText = "➕ Agregar Nuevo Producto";
-  
-  document.querySelectorAll('input[name="prod-cat-check"]').forEach(cb => cb.checked = false);
-  
-  document.getElementById('opciones-container').innerHTML = '';
-  addOpcionRow("Permanente", 20);
+function limpiarFormulario() {
+  productoEditandoId = null;
+  const form = document.getElementById('form-producto');
+  if (form) form.reset();
+
+  const container = document.getElementById('opciones-container');
+  if (container) {
+    container.innerHTML = '';
+    agregarCampoOpcion(); // Dejar un campo listo por defecto
+  }
+
+  const btnSubmit = document.getElementById('btn-guardar-producto');
+  if (btnSubmit) btnSubmit.innerText = "➕ Agregar Producto";
 }
 
-function showToast(mensaje) {
-  const container = document.getElementById('toast-container');
+// --- UTILIDADES ---
+
+function mostrarCargando(flag) {
+  const spinner = document.getElementById('loading-spinner');
+  if (spinner) {
+    spinner.style.display = flag ? 'flex' : 'none';
+  }
+}
+
+function mostrarToast(mensaje) {
+  const container = document.getElementById('admin-toast-container');
   if (!container) return;
+
   const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.innerHTML = `⚙️ <span>${mensaje}</span>`;
+  toast.className = 'admin-toast';
+  toast.innerText = mensaje;
   container.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 3500);
 }
