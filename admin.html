@@ -3,167 +3,351 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel Admin - Portal Gamestudio</title>
+  <title>Panel de Administración - Portal GamEstudio</title>
   <style>
     :root {
-      --bg-primary: #121214;
-      --bg-card: #1a1a1e;
-      --border-color: #2e2e38;
-      --accent-color: #00ff88;
+      --bg-primary: #121212;
+      --bg-card: #1e1e1e;
+      --accent: #7289da;
+      --accent-hover: #5b6eae;
       --text-main: #ffffff;
-      --text-muted: #a0a0b0;
+      --text-muted: #aaa;
+      --danger: #ff4444;
+      --success: #4CAF50;
+      --warning: #ffb703;
+      --border: #333;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     body {
       background-color: var(--bg-primary);
       color: var(--text-main);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
       padding: 20px;
     }
 
-    .admin-container {
-      max-width: 1100px;
+    .container {
+      max-width: 1000px;
       margin: 0 auto;
     }
 
-    .header-admin {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 2px solid var(--border-color);
-      padding-bottom: 15px;
+    h1, h2 {
       margin-bottom: 20px;
+      color: var(--text-main);
     }
 
-    .config-box {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: 8px;
       padding: 20px;
       margin-bottom: 25px;
     }
 
-    .table-products {
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background-color: #2a2a2a;
+      color: var(--text-main);
+      font-size: 1rem;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    button {
+      background-color: var(--accent);
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+    }
+
+    /* Tarjetas Estadísticas */
+    .stat-card {
+      background: #252836;
+      border: 1px solid var(--border);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .stat-card h3 {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .stat-card .amount {
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: var(--success);
+    }
+
+    /* Tablas */
+    table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
+      margin-top: 15px;
     }
 
-    .table-products th, .table-products td {
-      border: 1px solid var(--border-color);
-      padding: 10px;
+    th, td {
+      padding: 12px;
       text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
     }
 
-    .table-products th {
-      background-color: #222228;
+    th {
+      background-color: #2a2a2a;
+      color: var(--text-muted);
     }
 
-    .btn-small {
+    .btn-edit {
+      background-color: var(--warning);
       padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.85rem;
+      margin-right: 5px;
+      width: auto;
+      color: #000;
     }
 
-    .toast {
+    .btn-delete {
+      background-color: var(--danger);
+      padding: 6px 12px;
+      width: auto;
+    }
+
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      display: inline-block;
+    }
+    .status-pendiente { background-color: #ff9800; color: #000; }
+    .status-pagado { background-color: #2196F3; color: #fff; }
+    .status-completado { background-color: var(--success); color: #fff; }
+
+    /* Spinner de Carga */
+    #loading-spinner {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #333;
+      border-top: 5px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #admin-toast-container {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      background: var(--accent-color);
-      color: #000;
-      padding: 10px 20px;
+      z-index: 10000;
+    }
+
+    .admin-toast {
+      background-color: var(--success);
+      color: white;
+      padding: 12px 20px;
       border-radius: 5px;
-      font-weight: bold;
-      display: none;
+      margin-top: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
   </style>
 </head>
 <body>
 
-  <div class="admin-container">
-    <div class="header-admin">
-      <h2>⚙️ Panel de Administración - Portal Gamestudio</h2>
-      <a href="index.html" style="color: var(--accent-color); text-decoration: none; font-weight: bold;">← Volver a la Tienda</a>
-    </div>
-
-    <!-- Módulo de Estadísticas -->
-    <div class="config-box">
-      <h3>📊 Estadísticas de Ventas</h3>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px;">
-        
-        <div style="background: #222228; padding: 15px; border-radius: 8px; border-left: 4px solid #00ff88;">
-          <span style="font-size: 0.85rem; color: #a0a0b0;">Ventas esta Semana</span>
-          <h2 id="stat-semana" style="margin: 5px 0 0 0; color: #00ff88;">$0 USD</h2>
-          <small id="stat-semana-cant" style="color: #a0a0b0;">0 pedidos</small>
-        </div>
-
-        <div style="background: #222228; padding: 15px; border-radius: 8px; border-left: 4px solid #00b4d8;">
-          <span style="font-size: 0.85rem; color: #a0a0b0;">Ventas este Mes</span>
-          <h2 id="stat-mes" style="margin: 5px 0 0 0; color: #00b4d8;">$0 USD</h2>
-          <small id="stat-mes-cant" style="color: #a0a0b0;">0 pedidos</small>
-        </div>
-
-        <div style="background: #222228; padding: 15px; border-radius: 8px; border-left: 4px solid #ffb703;">
-          <span style="font-size: 0.85rem; color: #a0a0b0;">Ventas este Año</span>
-          <h2 id="stat-anio" style="margin: 5px 0 0 0; color: #ffb703;">$0 USD</h2>
-          <small id="stat-anio-cant" style="color: #a0a0b0;">0 pedidos</small>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Módulo Historial de Pedidos -->
-    <div class="config-box">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h3>📦 Historial de Pedidos</h3>
-        <button class="btn-small" style="background: var(--accent-color); color: #000; font-weight: bold; border: none;" onclick="cargarPedidosUI()">🔄 Refrescar</button>
-      </div>
-      <div style="overflow-x: auto;">
-        <table class="table-products" style="font-size: 0.85rem;">
-          <thead>
-            <tr>
-              <th>ID / Fecha</th>
-              <th>Cliente / Contacto</th>
-              <th>Detalles del Pedido</th>
-              <th>Total</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="admin-pedidos-list">
-            <!-- Carga dinámicamente -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Inventario de Productos -->
-    <div class="config-box">
-      <h3>🎮 Inventario de Productos</h3>
-      <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-        <button class="btn-small" style="background: var(--accent-color); color: #000; font-weight: bold; border: none;" onclick="agregarNuevoProductoModal()">+ Añadir Producto</button>
-      </div>
-      <div style="overflow-x: auto;">
-        <table class="table-products">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Modalidad</th>
-              <th>Precio (USD)</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="admin-productos-list">
-            <!-- Carga dinámicamente -->
-          </tbody>
-        </table>
-      </div>
-    </div>
+  <div id="loading-spinner">
+    <div class="spinner"></div>
   </div>
 
-  <div id="toast-msg" class="toast"></div>
+  <div id="admin-toast-container"></div>
+
+  <div class="container">
+    <h1>⚙️ Panel de Administración - Portal GamEstudio</h1>
+
+    <!-- 1. CONFIGURACIÓN DE GITHUB -->
+    <div class="card">
+      <h2>1. Configuración de Conexión (GitHub API)</h2>
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="gh-token">GitHub Personal Access Token:</label>
+          <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx">
+        </div>
+        <div class="form-group">
+          <label for="gh-repo">Repositorio (Usuario/Repo):</label>
+          <input type="text" id="gh-repo" placeholder="tu-usuario/portal-gamestudio">
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label for="gh-user">Usuario GitHub:</label>
+          <input type="text" id="gh-user" placeholder="tu-usuario">
+        </div>
+      </div>
+      <button type="button" onclick="guardarConfiguracion()">Guardar Configuración</button>
+      <p id="config-status" style="margin-top: 10px; font-weight: bold;"></p>
+    </div>
+
+    <!-- ESTADÍSTICAS DE VENTAS -->
+    <div class="card">
+      <h2>📊 Estadísticas de Ventas</h2>
+      <div class="grid-3">
+        <div class="stat-card">
+          <h3>Ventas Semanales</h3>
+          <div class="amount" id="stat-semana">$0 USD</div>
+          <small id="stat-count-semana">0 pedidos completados</small>
+        </div>
+        <div class="stat-card">
+          <h3>Ventas Mensuales</h3>
+          <div class="amount" id="stat-mes">$0 USD</div>
+          <small id="stat-count-mes">0 pedidos completados</small>
+        </div>
+        <div class="stat-card">
+          <h3>Ventas Anuales</h3>
+          <div class="amount" id="stat-anio">$0 USD</div>
+          <small id="stat-count-anio">0 pedidos completados</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORIAL DE PEDIDOS -->
+    <div class="card">
+      <h2>📋 Historial de Pedidos</h2>
+      <div class="grid-2" style="margin-bottom: 15px;">
+        <input type="text" id="order-search-input" placeholder="🔍 Buscar por cliente o ID..." onkeyup="filtrarPedidos()">
+        <select id="order-filter-status" onchange="filtrarPedidos()">
+          <option value="todos">Todos los Estados</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="pagado">Pagado</option>
+          <option value="completado">Completado</option>
+        </select>
+      </div>
+
+      <table id="tabla-pedidos">
+        <thead>
+          <tr>
+            <th>ID / Fecha</th>
+            <th>Cliente</th>
+            <th>Detalle</th>
+            <th>Total ($)</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="orders-list">
+          <tr>
+            <td colspan="6" style="text-align:center;">Cargando historial de pedidos...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. FORMULARIO DE PRODUCTO -->
+    <div class="card">
+      <h2 id="form-title">2. Agregar / Editar Producto</h2>
+      <form id="product-form" onsubmit="event.preventDefault(); guardarProducto();">
+        <input type="hidden" id="prod-id">
+        <div class="form-group">
+          <label for="prod-nombre">Nombre del Producto:</label>
+          <input type="text" id="prod-nombre" placeholder="Ej: FIFA 25" required>
+        </div>
+
+        <div class="form-group">
+          <label>Categorías:</label>
+          <div id="categories-checkbox-container" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="prod-file">Imagen del Producto:</label>
+          <input type="file" id="prod-file" accept="image/*">
+        </div>
+
+        <div class="form-group">
+          <label>Modalidades y Precios ($ USD):</label>
+          <div id="opciones-container"></div>
+          <button type="button" onclick="addOpcionRow()" style="background:#333; margin-top:5px;">+ Agregar Modalidad</button>
+        </div>
+
+        <button type="submit" id="btn-submit" style="margin-top: 15px;">🚀 Publicar en GitHub</button>
+        <button type="button" onclick="resetForm()" style="background:#555; margin-top: 10px;">Cancelar / Limpiar</button>
+      </form>
+    </div>
+
+    <!-- 3. LISTADO DE PRODUCTOS -->
+    <div class="card">
+      <h2>3. Catálogo Actual</h2>
+      <div class="form-group">
+        <input type="text" id="admin-search-input" placeholder="🔍 Buscar producto..." onkeyup="filtrarTablaAdmin()">
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Imagen</th>
+            <th>Nombre</th>
+            <th>Categorías</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="admin-product-list">
+          <tr>
+            <td colspan="4" style="text-align:center;">Cargando catálogo...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
 
   <script src="admin.js"></script>
 </body>
