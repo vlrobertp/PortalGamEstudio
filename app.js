@@ -1,332 +1,402 @@
-// CONFIGURACIÓN PRINCIPAL DE PORTAL GAMESTUDIO
-const TELEFONO_WHATSAPP = "5352890559"; 
-const TARJETA_PAGO = "9205 9598 7962 9732"; 
-const TASA_CAMBIO_DEFAULT = 675; // TASA DE CAMBIO INTERNA (CUP x 1 USD)
+/* ==========================================================================
+   PORTAL GAMESTUDIO - APP.JS
+   ========================================================================== */
 
+// Estado global de la aplicación
 let productos = [];
 let categorias = [];
-let carrito = [];
-let categoriaActual = 'todos';
+let cart = JSON.parse(localStorage.getItem('portal_cart')) || [];
+let currentCategory = 'todos';
 
-// Función para limpiar acentos y caracteres especiales
-function normalizarTexto(texto) {
-  if (!texto) return '';
-  return texto
-    .toString()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-}
+// Configuración de tasas de cambio por defecto
+const TASAS_CAMBIO = {
+  USD: 1,
+  MLC: 1,
+  CUP: 320 // Puedes ajustar este valor predeterminado o leerlo de localStorage
+};
 
-// Cargar catálogo, categorías y Cesta guardada al iniciar
 document.addEventListener('DOMContentLoaded', () => {
-  cargarCarritoGuardado(); // Persistencia en localStorage
-
-  fetch('productos.json')
-    .then(res => res.json())
-    .then(data => {
-      if (Array.isArray(data)) {
-        productos = data;
-      } else {
-        productos = data.productos || [];
-        categorias = data.categorias || [];
-        if (categorias.length > 0) {
-          renderCategoryButtons(categorias);
-        }
-      }
-      renderProducts(productos);
-    })
-    .catch(err => console.error("Error al cargar productos.json:", err));
+  cargarCatalogo();
+  actualizarContadorCarrito();
 });
 
-// Renderizar botones de filtro por categoría
-function renderCategoryButtons(listaCategorias) {
-  const container = document.querySelector('.categories');
-  if (!container) return;
+/* --------------------------------------------------------------------------
+   1. CARGA DE DATOS Y RENDERING
+   -------------------------------------------------------------------------- */
 
-  container.innerHTML = `<button class="cat-btn active" onclick="filterCategory('todos', this)">Todos</button>`;
+async function cargarCatalogo() {
+  try {
+    const res = await fetch('productos.json');
+    if (!res.ok) throw new Error("No se pudo cargar el archivo productos.json");
+    
+    const data = await res.json();
 
-  listaCategorias.forEach(cat => {
-    const btn = document.createElement('button');
-    btn.className = 'cat-btn';
-    btn.innerText = cat.nombre;
-    btn.onclick = (e) => filterCategory(cat.id, e.target);
-    container.appendChild(btn);
-  });
+    if (Array.isArray(data)) {
+      productos = data;
+    } else {
+      productos = data.productos || [];
+      categorias = data.categorias || [];
+    }
+
+    renderCategoriasNav();
+    renderProductos(productos);
+  } catch (error) {
+    console.error("Error al cargar el catálogo:", error);
+    const container = document.getElementById('grid-productos');
+    if (container) {
+      container.innerHTML = `<p style="color: var(--danger-color); text-align: center;">Error al cargar los productos. Asegúrate de estar ejecutando un servidor local o tener el JSON disponible.</p>`;
+    }
+  }
 }
 
-function renderProducts(lista) {
-  const container = document.getElementById('product-grid');
+function renderCategoriasNav() {
+  const navContainer = document.getElementById('nav-categorias');
+  if (!navContainer || categorias.length === 0) return;
+
+  // Botón "Todos"
+  let html = `<button class="btn-filter active" onclick="filtrarCategoria('todos', this)">Todos</button>`;
+
+  categorias.forEach(cat => {
+    html += `<button class="btn-filter" onclick="filtrarCategoria('${cat.id}', this)">${cat.nombre}</button>`;
+  });
+
+  navContainer.innerHTML = html;
+}
+
+function renderProductos(lista) {
+  const container = document.getElementById('grid-productos');
   if (!container) return;
-  
+
   container.innerHTML = '';
-  
+
   if (lista.length === 0) {
-    container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No hay productos disponibles en esta categoría.</p>';
+    container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">No se encontraron productos en esta sección.</p>`;
     return;
   }
 
-  // Obtener datos de la categoría activa
-  const catObj = categorias.find(c => c.id === categoriaActual);
-  const idCatNorm = normalizarTexto(categoriaActual);
-  const nombreCatNorm = catObj ? normalizarTexto(catObj.nombre) : '';
-
-  lista.forEach(p => {
+  lista.forEach(prod => {
     const card = document.createElement('div');
     card.className = 'product-card';
-    
-    let selectedIndex = 0;
+
+    // Generar badges de categorías
+    const catsArray = Array.isArray(prod.categorias) ? prod.categorias : [prod.categoria || 'general'];
+    const badgesHTML = catsArray.map(c => `<span class="badge">${c}</span>`).join(' ');
+
+    // Selector de opciones/precios (siempre refleja precio en USD)
     let opcionesHTML = '';
-
-    if (p.opciones && p.opciones.length > 0) {
-      if (categoriaActual !== 'todos') {
-        // Buscar el índice de la opción que coincida con la categoría activa
-        const indexCoincidente = p.opciones.findIndex(opc => {
-          const opcNorm = normalizarTexto(opc.nombre);
-          return (
-            (idCatNorm && opcNorm.includes(idCatNorm)) ||
-            (nombreCatNorm && opcNorm.includes(nombreCatNorm))
-          );
-        });
-
-        if (indexCoincidente !== -1) {
-          selectedIndex = indexCoincidente;
-        }
-      }
-
-      // Renderizar el selector <select> estableciendo la opción seleccionada
-      p.opciones.forEach((opc, idx) => {
-        const isSelected = idx === selectedIndex ? 'selected' : '';
-        opcionesHTML += `<option value="${idx}" ${isSelected}>${opc.nombre} - $${opc.precio} USD</option>`;
-      });
+    if (prod.opciones && prod.opciones.length > 0) {
+      opcionesHTML = `
+        <select id="opc-select-${prod.id}" class="select-opcion">
+          ${prod.opciones.map((opc, index) => `<option value="${index}">$${opc.precio.toFixed(2)} USD - ${opc.nombre}</option>`).join('')}
+        </select>
+      `;
+    } else {
+      opcionesHTML = `<p style="font-weight: bold; margin: 10px 0;">$0.00 USD</p>`;
     }
 
-    const precioInicial = p.opciones && p.opciones.length > 0 ? p.opciones[selectedIndex].precio : 0;
-
     card.innerHTML = `
-      <img src="${p.imagen}" alt="${p.nombre}" onerror="this.onerror=null; this.src='https://via.placeholder.com/300x200?text=Portal+GamEstudio';">
-      <h3>${p.nombre}</h3>
-      <div class="option-select-container">
-        <label>Modalidad:</label>
-        <select id="select-opc-${p.id}" onchange="updateCardPrice(${p.id})">
-          ${opcionesHTML}
-        </select>
+      <img src="${prod.imagen}" alt="${prod.nombre}" onerror="this.src='https://via.placeholder.com/300x200?text=Portal+GamEstudio';">
+      <div class="product-info">
+        <div>${badgesHTML}</div>
+        <h3>${prod.nombre}</h3>
+        ${opcionesHTML}
+        <button class="btn-whatsapp" style="width:100%; margin-top:10px;" onclick="agregarAlCarrito(${prod.id})">🛒 Añadir a la Cesta</button>
       </div>
-      <div class="price" id="price-display-${p.id}">$${precioInicial} USD</div>
-      <button class="btn-add" onclick="addToCart(${p.id})">Añadir a la Cesta</button>
     `;
+
     container.appendChild(card);
   });
 }
 
-function updateCardPrice(idProd) {
-  const prod = productos.find(p => p.id === idProd);
-  const selectIndex = document.getElementById(`select-opc-${idProd}`).value;
-  const precioSel = prod.opciones[selectIndex].precio;
-  document.getElementById(`price-display-${idProd}`).innerText = `$${precioSel} USD`;
+/* --------------------------------------------------------------------------
+   2. FILTROS Y BÚSQUEDA
+   -------------------------------------------------------------------------- */
+
+function filtrarCategoria(catId, btnElement) {
+  currentCategory = catId;
+
+  // Actualizar estado visual de botones de filtro
+  if (btnElement) {
+    document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+    btnElement.classList.add('active');
+  }
+
+  ejecutarFiltros();
 }
 
-// --- PERSISTENCIA DE CESTA EN LOCALSTORAGE ---
+function filtrarProductos() {
+  ejecutarFiltros();
+}
 
-function cargarCarritoGuardado() {
-  const guardado = localStorage.getItem('portal_carrito');
-  if (guardado) {
-    try {
-      carrito = JSON.parse(guardado);
-      updateCartUI();
-    } catch (e) {
-      carrito = [];
-    }
+function ejecutarFiltros() {
+  const searchInput = document.getElementById('search-input');
+  const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+  const filtrados = productos.filter(p => {
+    // Filtro por categoría
+    const catsArray = Array.isArray(p.categorias) ? p.categorias : [p.categoria || ''];
+    const coincideCat = (currentCategory === 'todos') || catsArray.includes(currentCategory);
+
+    // Filtro por texto de búsqueda
+    const coincideTexto = p.nombre.toLowerCase().includes(query);
+
+    return coincideCat && coincideTexto;
+  });
+
+  renderProductos(filtrados);
+}
+
+/* --------------------------------------------------------------------------
+   3. GESTIÓN DE LA CESTA DE COMPRAS
+   -------------------------------------------------------------------------- */
+
+function agregarAlCarrito(productId) {
+  const prod = productos.find(p => p.id === productId);
+  if (!prod) return;
+
+  const selectEl = document.getElementById(`opc-select-${productId}`);
+  let opcionSeleccionada = { nombre: 'Estándar', precio: 0 };
+
+  if (selectEl && prod.opciones && prod.opciones[selectEl.value]) {
+    opcionSeleccionada = prod.opciones[selectEl.value];
   }
+
+  // Buscar si ya existe en la cesta un item idéntico con la misma opción
+  const itemExistente = cart.find(item => item.id === productId && item.opcionNombre === opcionSeleccionada.nombre);
+
+  if (itemExistente) {
+    itemExistente.cantidad += 1;
+  } else {
+    cart.push({
+      id: prod.id,
+      nombre: prod.nombre,
+      imagen: prod.imagen,
+      opcionNombre: opcionSeleccionada.nombre,
+      precio: opcionSeleccionada.precio, // Precio base siempre en USD
+      cantidad: 1
+    });
+  }
+
+  guardarCarrito();
+  actualizarContadorCarrito();
+  showToast(`"${prod.nombre}" añadido a la cesta.`);
+}
+
+function cambiarCantidad(index, delta) {
+  if (!cart[index]) return;
+
+  cart[index].cantidad += delta;
+
+  if (cart[index].cantidad <= 0) {
+    cart.splice(index, 1);
+  }
+
+  guardarCarrito();
+  renderCartModal();
+  actualizarContadorCarrito();
+}
+
+function eliminarDelCarrito(index) {
+  if (!cart[index]) return;
+  cart.splice(index, 1);
+  
+  guardarCarrito();
+  renderCartModal();
+  actualizarContadorCarrito();
+}
+
+function vaciarCesta() {
+  cart = [];
+  guardarCarrito();
+  actualizarContadorCarrito();
+  renderCartModal();
 }
 
 function guardarCarrito() {
-  localStorage.setItem('portal_carrito', JSON.stringify(carrito));
+  localStorage.setItem('portal_cart', JSON.stringify(cart));
 }
 
-function addToCart(idProd) {
-  const prod = productos.find(p => p.id === idProd);
-  const selectIndex = document.getElementById(`select-opc-${idProd}`).value;
-  const opcionSeleccionada = prod.opciones[selectIndex];
+function actualizarContadorCarrito() {
+  const badgeCount = document.getElementById('cart-count');
+  if (!badgeCount) return;
 
-  const itemCarrito = {
-    idCart: Date.now() + Math.random(),
-    nombre: prod.nombre,
-    modalidad: opcionSeleccionada.nombre,
-    precio: opcionSeleccionada.precio
-  };
-
-  carrito.push(itemCarrito);
-  guardarCarrito();
-  updateCartUI();
-
-  showToast(`¡<strong>${prod.nombre}</strong> (${opcionSeleccionada.nombre}) añadido a la cesta!`);
+  const totalItems = cart.reduce((acc, item) => acc + item.cantidad, 0);
+  badgeCount.innerText = totalItems;
+  badgeCount.style.display = totalItems > 0 ? 'inline-block' : 'none';
 }
 
-function removeFromCart(idCart) {
-  carrito = carrito.filter(item => item.idCart !== idCart);
-  guardarCarrito();
-  updateCartUI();
+/* --------------------------------------------------------------------------
+   4. MODAL DEL CARRITO Y CONVERSIÓN DE MONEDA AL CHECKOUT
+   -------------------------------------------------------------------------- */
+
+function abrirModalCarrito() {
+  const modal = document.getElementById('cart-modal');
+  if (!modal) return;
+
+  renderCartModal();
+  modal.style.display = 'flex';
 }
 
-function updateCartUI() {
-  const countEl = document.getElementById('cart-count');
-  if (countEl) countEl.innerText = carrito.length;
+function cerrarModalCarrito() {
+  const modal = document.getElementById('cart-modal');
+  if (modal) modal.style.display = 'none';
+}
 
-  const list = document.getElementById('cart-items');
-  if (!list) return;
+function renderCartModal() {
+  const container = document.getElementById('cart-items-container');
+  const totalUSDContainer = document.getElementById('cart-total-usd');
+  const totalConvertidoContainer = document.getElementById('cart-total-convertido');
+  const currencySelect = document.getElementById('cart-currency-select');
 
-  list.innerHTML = '';
-  
+  if (!container) return;
+
+  if (cart.length === 0) {
+    container.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding: 20px;">Tu cesta está vacía.</p>`;
+    if (totalUSDContainer) totalUSDContainer.innerText = "$0.00 USD";
+    if (totalConvertidoContainer) totalConvertidoContainer.innerText = "0.00";
+    return;
+  }
+
+  container.innerHTML = '';
   let totalUSD = 0;
-  carrito.forEach(item => {
-    totalUSD += item.precio;
-    list.innerHTML += `
-      <li class="cart-item-row">
-        <div>
-          <strong>${item.nombre}</strong><br>
-          <small>Modalidad: ${item.modalidad} - <span>$${item.precio} USD</span></small>
-        </div>
-        <button class="btn-delete" onclick="removeFromCart(${item.idCart})">❌</button>
-      </li>
+
+  cart.forEach((item, index) => {
+    const subtotal = item.precio * item.cantidad;
+    totalUSD += subtotal;
+
+    const row = document.createElement('div');
+    row.className = 'cart-item-row';
+    row.style.cssText = 'display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);';
+
+    row.innerHTML = `
+      <img src="${item.imagen}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px;" onerror="this.src='https://via.placeholder.com/45';">
+      <div style="flex: 1;">
+        <h4 style="margin: 0; font-size: 0.9rem;">${item.nombre}</h4>
+        <small style="color: var(--text-muted);">${item.opcionNombre} - $${item.precio.toFixed(2)} USD c/u</small>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <button class="btn-small" onclick="cambiarCantidad(${index}, -1)">-</button>
+        <span style="font-weight: bold; min-width: 20px; text-align: center;">${item.cantidad}</span>
+        <button class="btn-small" onclick="cambiarCantidad(${index}, 1)">+</button>
+      </div>
+      <strong style="min-width: 65px; text-align: right;">$${subtotal.toFixed(2)}</strong>
+      <button onclick="eliminarDelCarrito(${index})" style="background: none; border: none; color: var(--danger-color); cursor: pointer; font-size: 1.1rem; margin-left: 5px;">🗑️</button>
     `;
+
+    container.appendChild(row);
   });
-  
-  const totalUsdEl = document.getElementById('cart-total-usd');
-  if (totalUsdEl) totalUsdEl.innerText = totalUSD;
-  
-  calculateCUPTotal();
+
+  if (totalUSDContainer) {
+    totalUSDContainer.innerText = `$${totalUSD.toFixed(2)} USD`;
+  }
+
+  calcularTotalConvertido(totalUSD);
 }
+
+function calcularTotalConvertido(totalUSDInput) {
+  let totalUSD = totalUSDInput;
+  
+  if (totalUSD === undefined) {
+    totalUSD = cart.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
+  }
+
+  const currencySelect = document.getElementById('cart-currency-select');
+  const totalConvertidoContainer = document.getElementById('cart-total-convertido');
+  if (!currencySelect || !totalConvertidoContainer) return;
+
+  const moneda = currencySelect.value;
+  let tasa = TASAS_CAMBIO[moneda] || 1;
+
+  if (moneda === 'CUP') {
+    const tasaGuardada = parseFloat(localStorage.getItem('tasa_cup'));
+    if (!isNaN(tasaGuardada) && tasaGuardada > 0) {
+      tasa = tasaGuardada;
+    }
+  }
+
+  const totalCalculado = totalUSD * tasa;
+  totalConvertidoContainer.innerText = `${totalCalculado.toFixed(2)} ${moneda}`;
+}
+
+/* --------------------------------------------------------------------------
+   5. ENVÍO POR WHATSAPP Y LIMPIEZA DE CESTA
+   -------------------------------------------------------------------------- */
+
+function enviarPedidoWhatsApp() {
+  if (cart.length === 0) {
+    alert("La cesta está vacía.");
+    return;
+  }
+
+  // 1. Moneda elegida en la cesta para la conversión
+  const currencySelect = document.getElementById('cart-currency-select');
+  const selectedCurrency = currencySelect ? currencySelect.value : 'USD';
+  
+  let tasa = TASAS_CAMBIO[selectedCurrency] || 1;
+  if (selectedCurrency === 'CUP') {
+    const tasaGuardada = parseFloat(localStorage.getItem('tasa_cup'));
+    if (!isNaN(tasaGuardada) && tasaGuardada > 0) {
+      tasa = tasaGuardada;
+    }
+  }
+
+  // 2. Construcción del mensaje para WhatsApp
+  let mensaje = "¡Hola! Quisiera realizar el siguiente pedido en Portal GamEstudio:\n\n";
+  let totalUSD = 0;
+
+  cart.forEach((item, index) => {
+    const subtotalUSD = item.precio * item.cantidad;
+    totalUSD += subtotalUSD;
+
+    mensaje += `${index + 1}. *${item.nombre}*\n`;
+    mensaje += `   - Opción: ${item.opcionNombre}\n`;
+    mensaje += `   - Cantidad: ${item.cantidad}\n`;
+    mensaje += `   - Precio unitario: $${item.precio.toFixed(2)} USD\n`;
+    mensaje += `   - Subtotal: $${subtotalUSD.toFixed(2)} USD\n\n`;
+  });
+
+  const totalFinalConvertido = totalUSD * tasa;
+
+  mensaje += `---------------------------\n`;
+  mensaje += `*TOTAL BASE:* $${totalUSD.toFixed(2)} USD\n`;
+  if (selectedCurrency !== 'USD') {
+    mensaje += `*TOTAL A PAGAR (${selectedCurrency}):* ${totalFinalConvertido.toFixed(2)} ${selectedCurrency}\n`;
+  }
+  mensaje += `---------------------------\n\n`;
+  mensaje += "Quedo a la espera de sus datos para concretar el pago y la transferencia. ¡Muchas gracias!";
+
+  // 3. Teléfono destino
+  const numeroTelefono = "5350000000"; // Sustituir por tu número real con código de país sin +
+
+  // 4. Abrir la URL de WhatsApp
+  const url = `https://wa.me/${numeroTelefono}?text=${encodeURIComponent(mensaje)}`;
+  window.open(url, '_blank');
+
+  // 5. LIMPIAR LA CESTA Y CERRAR EL MODAL
+  vaciarCesta();
+  cerrarModalCarrito();
+  showToast("¡Pedido enviado! La cesta se ha limpiado.");
+}
+
+/* --------------------------------------------------------------------------
+   6. NOTIFICACIONES TOAST
+   -------------------------------------------------------------------------- */
 
 function showToast(mensaje) {
-  const container = document.getElementById('toast-container');
-  if (!container) return;
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
 
   const toast = document.createElement('div');
   toast.className = 'toast';
   toast.innerHTML = `🛒 <span>${mensaje}</span>`;
-
   container.appendChild(toast);
 
   setTimeout(() => {
     toast.remove();
   }, 3000);
-}
-
-function toggleDeliveryAddress() {
-  const deliveryType = document.getElementById('delivery-type').value;
-  const addressGroup = document.getElementById('address-group');
-  
-  if (deliveryType === 'Domicilio') {
-    addressGroup.style.display = 'block';
-  } else {
-    addressGroup.style.display = 'none';
-  }
-}
-
-function toggleExchangeRateInput() {
-  const metodo = document.getElementById('payment-method').value;
-  const cupBox = document.getElementById('cup-conversion-box');
-
-  if (metodo.includes('CUP')) {
-    cupBox.style.display = 'block';
-    calculateCUPTotal();
-  } else {
-    cupBox.style.display = 'none';
-  }
-}
-
-function calculateCUPTotal() {
-  const totalUsdEl = document.getElementById('cart-total-usd');
-  const totalUSD = totalUsdEl ? parseFloat(totalUsdEl.innerText) || 0 : 0;
-  const totalCUP = totalUSD * TASA_CAMBIO_DEFAULT;
-  
-  const totalCupEl = document.getElementById('cart-total-cup');
-  if (totalCupEl) totalCupEl.innerText = totalCUP.toLocaleString();
-}
-
-function toggleCart() {
-  const modal = document.getElementById('cart-modal');
-  modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
-}
-
-function filterCategory(cat, element) {
-  categoriaActual = cat;
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-  if (element) element.classList.add('active');
-  
-  let filtrados = cat === 'todos' 
-    ? productos 
-    : productos.filter(p => {
-        if (Array.isArray(p.categorias)) {
-          return p.categorias.includes(cat);
-        }
-        return p.categoria === cat;
-      });
-
-  renderProducts(filtrados);
-}
-
-function filterProducts() {
-  const text = normalizarTexto(document.getElementById('search-input').value);
-  const filtrados = productos.filter(p => {
-    const coincideNombre = normalizarTexto(p.nombre).includes(text);
-    const perteneceCategoria = categoriaActual === 'todos' || (
-      Array.isArray(p.categorias) ? p.categorias.includes(categoriaActual) : p.categoria === categoriaActual
-    );
-    return coincideNombre && perteneceCategoria;
-  });
-
-  renderProducts(filtrados);
-}
-
-function sendWhatsAppOrder() {
-  const nombre = document.getElementById('client-name').value;
-  const telefono = document.getElementById('client-phone').value;
-  const deliveryType = document.getElementById('delivery-type').value;
-  const direccion = document.getElementById('client-address').value;
-  const metodoPago = document.getElementById('payment-method').value;
-
-  if (carrito.length === 0) return alert("Tu cesta está vacía");
-  if (!nombre || !telefono) return alert("Por favor, completa tu nombre y teléfono de contacto.");
-  
-  if (deliveryType === 'Domicilio' && !direccion.trim()) {
-    return alert("Por favor, ingresa la dirección para la entrega a domicilio.");
-  }
-
-  let mensaje = `🎮 *NUEVO PEDIDO - PORTAL GAMESTUDIO*\n\n`;
-  let totalUSD = 0;
-
-  carrito.forEach(item => {
-    mensaje += `▪️ *${item.nombre}*\n   Modalidad: ${item.modalidad} ($${item.precio} USD)\n`;
-    totalUSD += item.precio;
-  });
-
-  mensaje += `\n💰 *TOTAL EN USD:* $${totalUSD} USD`;
-
-  if (metodoPago.includes('CUP')) {
-    const totalCUP = totalUSD * TASA_CAMBIO_DEFAULT;
-    mensaje += `\n💵 *TOTAL A PAGAR (CUP):* ${totalCUP.toLocaleString()} CUP`;
-  }
-
-  mensaje += `\n💳 *Método de Pago:* ${metodoPago}`;
-
-  if (metodoPago.includes("Transferencia")) {
-    mensaje += `\n🏦 *Tarjeta para Transferencia:* \`${TARJETA_PAGO}\``;
-  }
-
-  mensaje += `\n\n👤 *DATOS DEL CLIENTE:*`;
-  mensaje += `\n▪️ Nombre: ${nombre}`;
-  mensaje += `\n▪️ Teléfono: ${telefono}`;
-  mensaje += `\n🚚 *Tipo de Entrega:* ${deliveryType}`;
-
-  if (deliveryType === 'Domicilio') {
-    mensaje += `\n📍 *Dirección:* ${direccion}`;
-  }
-
-  mensaje += `\n\n¿Me confirman la disponibilidad para procesar la orden?`;
-
-  const url = `https://wa.me/${TELEFONO_WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
-  window.open(url, '_blank');
 }
