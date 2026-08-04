@@ -88,22 +88,44 @@
       <a href="index.html" style="color: var(--accent-color); text-decoration: none; font-weight: bold;">← Volver a la Tienda</a>
     </div>
 
-    <!-- Sección de Historial de Pedidos -->
+    <!-- Módulo de Estadísticas -->
     <div class="config-box">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
-        <h3>📦 Historial de Pedidos</h3>
-        <div>
-          <button class="btn-small" style="background: var(--border-color); color: #fff; border:none;" onclick="exportarPedidosJSON()">📥 Exportar Pedidos</button>
-          <button class="btn-small" style="background: var(--accent-color); color: #000; border:none; font-weight:bold;" onclick="cargarPedidosUI()">🔄 Refrescar</button>
+      <h3>📊 Estadísticas de Ventas</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px;">
+        
+        <div style="background: #222228; padding: 15px; border-radius: 8px; border-left: 4px solid #00ff88;">
+          <span style="font-size: 0.85rem; color: #a0a0b0;">Ventas esta Semana</span>
+          <h2 id="stat-semana" style="margin: 5px 0 0 0; color: #00ff88;">$0 USD</h2>
+          <small id="stat-semana-cant" style="color: #a0a0b0;">0 pedidos</small>
         </div>
-      </div>
 
+        <div style="background: #222228; padding: 15px; border-radius: 8px; border-left: 4px solid #00b4d8;">
+          <span style="font-size: 0.85rem; color: #a0a0b0;">Ventas este Mes</span>
+          <h2 id="stat-mes" style="margin: 5px 0 0 0; color: #00b4d8;">$0 USD</h2>
+          <small id="stat-mes-cant" style="color: #a0a0b0;">0 pedidos</small>
+        </div>
+
+        <div style="background: #222228; padding: 15px; border-radius: 8px; border-left: 4px solid #ffb703;">
+          <span style="font-size: 0.85rem; color: #a0a0b0;">Ventas este Año</span>
+          <h2 id="stat-anio" style="margin: 5px 0 0 0; color: #ffb703;">$0 USD</h2>
+          <small id="stat-anio-cant" style="color: #a0a0b0;">0 pedidos</small>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Módulo Historial de Pedidos -->
+    <div class="config-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3>📦 Historial de Pedidos</h3>
+        <button class="btn-small" style="background: var(--accent-color); color: #000; font-weight: bold; border: none;" onclick="cargarPedidosUI()">🔄 Refrescar</button>
+      </div>
       <div style="overflow-x: auto;">
         <table class="table-products" style="font-size: 0.85rem;">
           <thead>
             <tr>
               <th>ID / Fecha</th>
-              <th>Cliente / Teléfono</th>
+              <th>Cliente / Contacto</th>
               <th>Detalles del Pedido</th>
               <th>Total</th>
               <th>Estado</th>
@@ -117,7 +139,7 @@
       </div>
     </div>
 
-    <!-- Sección de Gestión de Productos -->
+    <!-- Inventario de Productos -->
     <div class="config-box">
       <h3>🎮 Inventario de Productos</h3>
       <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
