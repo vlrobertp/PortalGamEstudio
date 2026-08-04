@@ -1,158 +1,330 @@
-// ==========================================================================
-// CONFIGURACIÓN Y ESTADO DE LA TIENDA - PORTAL GAMESTUDIO
-// ==========================================================================
+// CONFIGURACIÓN PRINCIPAL DE PORTAL GAMESTUDIO
+const TELEFONO_WHATSAPP = "5352890559"; 
+const TARJETA_PAGO = "9205 9598 7962 9732"; 
+const TASA_CAMBIO_DEFAULT = 675; // TASA DE CAMBIO INTERNA (CUP x 1 USD)
 
-const TELEFONO_WHATSAPP = "5350000000"; // Reemplaza por tu número de WhatsApp sin el '+'
-const TASA_CAMBIO_DEFAULT = 320; 
-const TARJETA_PAGO = "9200xxxxXXXXxxxx"; 
-
-let productos = JSON.parse(localStorage.getItem('portal_productos')) || [
-  { id: 1, nombre: "Demon's Souls PS5", precio: 25, modalidad: "Cuenta Primaria", imagen: "https://via.placeholder.com/150" },
-  { id: 2, nombre: "FIFA 24 PS5", precio: 30, modalidad: "Cuenta Secundaria", imagen: "https://via.placeholder.com/150" }
-];
-
+let productos = [];
+let categorias = [];
 let carrito = [];
+let categoriaActual = 'todos';
 
-// ==========================================================================
-// INICIALIZACIÓN
-// ==========================================================================
+// Función para limpiar acentos y caracteres especiales
+function normalizarTexto(texto) {
+  if (!texto) return '';
+  return texto
+    .toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
 
+// Cargar catálogo, categorías y Cesta guardada al iniciar
 document.addEventListener('DOMContentLoaded', () => {
-  renderizarProductos();
-  actualizarCarritoUI();
-  
-  const deliverySelect = document.getElementById('delivery-type');
-  if (deliverySelect) {
-    deliverySelect.addEventListener('change', (e) => {
-      const addressBox = document.getElementById('address-container');
-      if (addressBox) {
-        addressBox.style.display = e.target.value === 'Domicilio' ? 'block' : 'none';
+  cargarCarritoGuardado(); // Persistencia en localStorage
+
+  fetch('productos.json')
+    .then(res => res.json())
+    .then(data => {
+      if (Array.isArray(data)) {
+        productos = data;
+      } else {
+        productos = data.productos || [];
+        categorias = data.categorias || [];
+        if (categorias.length > 0) {
+          renderCategoryButtons(categorias);
+        }
       }
-    });
-  }
+      renderProducts(productos);
+    })
+    .catch(err => console.error("Error al cargar productos.json:", err));
 });
 
-// ==========================================================================
-// RENDERIZADO DE PRODUCTOS
-// ==========================================================================
-
-function renderizarProductos() {
-  const container = document.getElementById('products-grid');
+// Renderizar botones de filtro por categoría
+function renderCategoryButtons(listaCategorias) {
+  const container = document.querySelector('.categories');
   if (!container) return;
 
-  container.innerHTML = '';
+  container.innerHTML = `<button class="cat-btn active" onclick="filterCategory('todos', this)">Todos</button>`;
 
-  productos.forEach(prod => {
+  listaCategorias.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn';
+    btn.innerText = cat.nombre;
+    btn.onclick = (e) => filterCategory(cat.id, e.target);
+    container.appendChild(btn);
+  });
+}
+
+function renderProducts(lista) {
+  const container = document.getElementById('product-grid');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  if (lista.length === 0) {
+    container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No hay productos disponibles en esta categoría.</p>';
+    return;
+  }
+
+  // Obtener datos de la categoría activa
+  const catObj = categorias.find(c => c.id === categoriaActual);
+  const idCatNorm = normalizarTexto(categoriaActual);
+  const nombreCatNorm = catObj ? normalizarTexto(catObj.nombre) : '';
+
+  lista.forEach(p => {
     const card = document.createElement('div');
     card.className = 'product-card';
+    
+    let selectedIndex = 0;
+    let opcionesHTML = '';
+
+    if (p.opciones && p.opciones.length > 0) {
+      if (categoriaActual !== 'todos') {
+        const indexCoincidente = p.opciones.findIndex(opc => {
+          const opcNorm = normalizarTexto(opc.nombre);
+          return (
+            (idCatNorm && opcNorm.includes(idCatNorm)) ||
+            (nombreCatNorm && opcNorm.includes(nombreCatNorm))
+          );
+        });
+
+        if (indexCoincidente !== -1) {
+          selectedIndex = indexCoincidente;
+        }
+      }
+
+      p.opciones.forEach((opc, idx) => {
+        const isSelected = idx === selectedIndex ? 'selected' : '';
+        opcionesHTML += `<option value="${idx}" ${isSelected}>${opc.nombre} - $${opc.precio} USD</option>`;
+      });
+    }
+
+    const precioInicial = p.opciones && p.opciones.length > 0 ? p.opciones[selectedIndex].precio : 0;
+
     card.innerHTML = `
-      <img src="${prod.imagen}" alt="${prod.nombre}" class="product-img">
-      <div class="product-info">
-        <h4>${prod.nombre}</h4>
-        <p class="product-mode">${prod.modalidad}</p>
-        <p class="product-price">$${prod.precio} USD</p>
-        <button class="btn-add" onclick="agregarAlCarrito(${prod.id})">Añadir a la Cesta</button>
+      <img src="${p.imagen}" alt="${p.nombre}" onerror="this.onerror=null; this.src='https://via.placeholder.com/300x200?text=Portal+GamEstudio';">
+      <h3>${p.nombre}</h3>
+      <div class="option-select-container">
+        <label>Modalidad:</label>
+        <select id="select-opc-${p.id}" onchange="updateCardPrice(${p.id})">
+          ${opcionesHTML}
+        </select>
       </div>
+      <div class="price" id="price-display-${p.id}">$${precioInicial} USD</div>
+      <button class="btn-add" onclick="addToCart(${p.id})">Añadir a la Cesta</button>
     `;
     container.appendChild(card);
   });
 }
 
-// ==========================================================================
-// GESTIÓN DE LA CESTA DE COMPRA
-// ==========================================================================
+function updateCardPrice(idProd) {
+  const prod = productos.find(p => p.id === idProd);
+  const selectIndex = document.getElementById(`select-opc-${idProd}`).value;
+  const precioSel = prod.opciones[selectIndex].precio;
+  document.getElementById(`price-display-${idProd}`).innerText = `$${precioSel} USD`;
+}
 
-function agregarAlCarrito(id) {
-  const producto = productos.find(p => p.id === id);
-  if (producto) {
-    carrito.push(producto);
-    actualizarCarritoUI();
+// --- PERSISTENCIA DE CESTA EN LOCALSTORAGE ---
+
+function cargarCarritoGuardado() {
+  const guardado = localStorage.getItem('portal_carrito');
+  if (guardado) {
+    try {
+      carrito = JSON.parse(guardado);
+      updateCartUI();
+    } catch (e) {
+      carrito = [];
+    }
   }
 }
 
-function eliminarDelCarrito(index) {
-  carrito.splice(index, 1);
-  actualizarCarritoUI();
+function guardarCarrito() {
+  localStorage.setItem('portal_carrito', JSON.stringify(carrito));
 }
 
-function actualizarCarritoUI() {
-  const listContainer = document.getElementById('cart-items');
-  const totalUSDElement = document.getElementById('cart-total-usd');
-  const badgeCount = document.getElementById('cart-badge');
+function addToCart(idProd) {
+  const prod = productos.find(p => p.id === idProd);
+  const selectIndex = document.getElementById(`select-opc-${idProd}`).value;
+  const opcionSeleccionada = prod.opciones[selectIndex];
 
-  if (badgeCount) badgeCount.textContent = carrito.length;
-  if (!listContainer) return;
+  const itemCarrito = {
+    idCart: Date.now() + Math.random(),
+    nombre: prod.nombre,
+    modalidad: opcionSeleccionada.nombre,
+    precio: opcionSeleccionada.precio
+  };
 
-  listContainer.innerHTML = '';
+  carrito.push(itemCarrito);
+  guardarCarrito();
+  updateCartUI();
+
+  showToast(`¡<strong>${prod.nombre}</strong> (${opcionSeleccionada.nombre}) añadido a la cesta!`);
+}
+
+function removeFromCart(idCart) {
+  carrito = carrito.filter(item => item.idCart !== idCart);
+  guardarCarrito();
+  updateCartUI();
+}
+
+function updateCartUI() {
+  const countEl = document.getElementById('cart-count');
+  if (countEl) countEl.innerText = carrito.length;
+
+  const list = document.getElementById('cart-items');
+  if (!list) return;
+
+  list.innerHTML = '';
+  
   let totalUSD = 0;
-
-  carrito.forEach((item, idx) => {
+  carrito.forEach(item => {
     totalUSD += item.precio;
-    const itemDiv = document.createElement('div');
-    itemDiv.className = 'cart-item';
-    itemDiv.innerHTML = `
-      <span><strong>${item.nombre}</strong> (${item.modalidad}) - $${item.precio} USD</span>
-      <button onclick="eliminarDelCarrito(${idx})" class="btn-remove">❌</button>
+    list.innerHTML += `
+      <li class="cart-item-row">
+        <div>
+          <strong>${item.nombre}</strong><br>
+          <small>Modalidad: ${item.modalidad} - <span>$${item.precio} USD</span></small>
+        </div>
+        <button class="btn-delete" onclick="removeFromCart(${item.idCart})">❌</button>
+      </li>
     `;
-    listContainer.appendChild(itemDiv);
+  });
+  
+  const totalUsdEl = document.getElementById('cart-total-usd');
+  if (totalUsdEl) totalUsdEl.innerText = totalUSD;
+  
+  calculateCUPTotal();
+}
+
+function showToast(mensaje) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `🛒 <span>${mensaje}</span>`;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
+}
+
+function toggleDeliveryAddress() {
+  const deliveryType = document.getElementById('delivery-type').value;
+  const addressGroup = document.getElementById('address-group');
+  
+  if (deliveryType === 'Domicilio') {
+    addressGroup.style.display = 'block';
+  } else {
+    addressGroup.style.display = 'none';
+  }
+}
+
+function toggleExchangeRateInput() {
+  const metodo = document.getElementById('payment-method').value;
+  const cupBox = document.getElementById('cup-conversion-box');
+
+  if (metodo.includes('CUP')) {
+    cupBox.style.display = 'block';
+    calculateCUPTotal();
+  } else {
+    cupBox.style.display = 'none';
+  }
+}
+
+function calculateCUPTotal() {
+  const totalUsdEl = document.getElementById('cart-total-usd');
+  const totalUSD = totalUsdEl ? parseFloat(totalUsdEl.innerText) || 0 : 0;
+  const totalCUP = totalUSD * TASA_CAMBIO_DEFAULT;
+  
+  const totalCupEl = document.getElementById('cart-total-cup');
+  if (totalCupEl) totalCupEl.innerText = totalCUP.toLocaleString();
+}
+
+function toggleCart() {
+  const modal = document.getElementById('cart-modal');
+  modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+}
+
+function filterCategory(cat, element) {
+  categoriaActual = cat;
+  
+  const buttons = document.querySelectorAll('.cat-btn');
+  buttons.forEach(b => b.classList.remove('active'));
+  
+  if (element) {
+    element.classList.add('active');
+  } else {
+    buttons.forEach(b => {
+      const onclickAttr = b.getAttribute('onclick');
+      if (onclickAttr && onclickAttr.includes(`'${cat}'`)) {
+        b.classList.add('active');
+      }
+    });
+  }
+  
+  let filtrados = cat === 'todos' 
+    ? productos 
+    : productos.filter(p => {
+        if (Array.isArray(p.categorias)) {
+          return p.categorias.includes(cat);
+        }
+        return p.categoria === cat;
+      });
+
+  renderProducts(filtrados);
+}
+
+function filterProducts() {
+  const text = normalizarTexto(document.getElementById('search-input').value);
+  const filtrados = productos.filter(p => {
+    const coincideNombre = normalizarTexto(p.nombre).includes(text);
+    const perteneceCategoria = categoriaActual === 'todos' || (
+      Array.isArray(p.categorias) ? p.categorias.includes(categoriaActual) : p.categoria === categoriaActual
+    );
+    return coincideNombre && perteneceCategoria;
   });
 
-  if (totalUSDElement) {
-    totalUSDElement.textContent = `$${totalUSD} USD`;
-  }
+  renderProducts(filtrados);
 }
 
-// ==========================================================================
-// ENVÍO DEL PEDIDO Y REGISTRO EN HISTORIAL
-// ==========================================================================
+// GUARDADO AUTOMÁTICO DE PEDIDOS AL ENVIAR WHATSAPP
+function guardarPedidoEnHistorial(nuevoPedido) {
+  let pedidos = JSON.parse(localStorage.getItem('portal_pedidos') || '[]');
+  pedidos.unshift(nuevoPedido);
+  localStorage.setItem('portal_pedidos', JSON.stringify(pedidos));
+}
 
 function sendWhatsAppOrder() {
   const nombre = document.getElementById('client-name').value;
   const telefono = document.getElementById('client-phone').value;
   const deliveryType = document.getElementById('delivery-type').value;
-  const direccion = document.getElementById('client-address') ? document.getElementById('client-address').value : '';
+  const direccion = document.getElementById('client-address').value;
   const metodoPago = document.getElementById('payment-method').value;
 
-  if (carrito.length === 0) return alert("Tu cesta está vacía.");
-  if (!nombre || !telefono) return alert("Por favor, completa tu nombre y teléfono.");
-
+  if (carrito.length === 0) return alert("Tu cesta está vacía");
+  if (!nombre || !telefono) return alert("Por favor, completa tu nombre y teléfono de contacto.");
+  
   if (deliveryType === 'Domicilio' && !direccion.trim()) {
     return alert("Por favor, ingresa la dirección para la entrega a domicilio.");
   }
 
-  const orderId = "ORD-" + Date.now().toString().slice(-6);
-  const fechaIso = new Date().toISOString();
-
+  let mensaje = `🎮 *NUEVO PEDIDO - PORTAL GAMESTUDIO*\n\n`;
   let totalUSD = 0;
-  carrito.forEach(item => totalUSD += item.precio);
 
-  const nuevoPedido = {
-    id: orderId,
-    fecha: fechaIso,
-    cliente: nombre,
-    telefono: telefono,
-    entrega: deliveryType,
-    direccion: deliveryType === 'Domicilio' ? direccion : 'N/A',
-    metodoPago: metodoPago,
-    items: [...carrito],
-    totalUSD: totalUSD,
-    estado: 'pendiente'
-  };
-
-  let historial = JSON.parse(localStorage.getItem('portal_pedidos_historial')) || [];
-  historial.unshift(nuevoPedido);
-  localStorage.setItem('portal_pedidos_historial', JSON.stringify(historial));
-
-  let mensaje = `🎮 *NUEVO PEDIDO (${orderId}) - PORTAL GAMESTUDIO*\n\n`;
   carrito.forEach(item => {
     mensaje += `▪️ *${item.nombre}*\n   Modalidad: ${item.modalidad} ($${item.precio} USD)\n`;
+    totalUSD += item.precio;
   });
 
   mensaje += `\n💰 *TOTAL EN USD:* $${totalUSD} USD`;
 
   if (metodoPago.includes('CUP')) {
     const totalCUP = totalUSD * TASA_CAMBIO_DEFAULT;
-    mensaje += `\n💵 *TOTAL ESTIMADO (CUP):* ${totalCUP.toLocaleString()} CUP`;
+    mensaje += `\n💵 *TOTAL A PAGAR (CUP):* ${totalCUP.toLocaleString()} CUP`;
   }
 
   mensaje += `\n💳 *Método de Pago:* ${metodoPago}`;
@@ -171,6 +343,27 @@ function sendWhatsAppOrder() {
   }
 
   mensaje += `\n\n¿Me confirman la disponibilidad para procesar la orden?`;
+
+  // Registrar el pedido en el historial local antes de redirigir a WhatsApp
+  const nuevoPedido = {
+    id: 'PED-' + Date.now(),
+    fecha: new Date().toISOString(),
+    cliente: nombre,
+    telefono: telefono,
+    entrega: deliveryType,
+    direccion: direccion,
+    metodoPago: metodoPago,
+    totalUSD: totalUSD,
+    estado: 'pendiente', // pendiente, pagado, completado
+    items: [...carrito]
+  };
+  guardarPedidoEnHistorial(nuevoPedido);
+
+  // Limpiar carrito tras generar pedido
+  carrito = [];
+  guardarCarrito();
+  updateCartUI();
+  toggleCart();
 
   const url = `https://wa.me/${TELEFONO_WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
   window.open(url, '_blank');
