@@ -44,13 +44,13 @@
   "productos": [
     {
       "id": 1,
-      "nombre": "EA Sports FC 26 (PS4 & PS5)",
+      "nombre": "EA SPORTS FC 26",
       "categorias": [
-        "ps4",
-        "xbox",
         "pirateria_ps5",
         "pirateria_ps4",
-        "ps5inyeccion"
+        "ps5inyeccion",
+        "ps4inyeccion",
+        "xboxgamepass"
       ],
       "imagen": "./imagenes/1785727119800_fuh_product_cover.webp",
       "opciones": [
@@ -67,11 +67,11 @@
           "precio": 0
         },
         {
-          "nombre": "PS4 Perdible",
+          "nombre": "PS4 inyeccion Perdible",
           "precio": 5
         },
         {
-          "nombre": "PS4 Permanente",
+          "nombre": "PS4 inyeccion Permanente",
           "precio": 10
         },
         {
@@ -168,9 +168,7 @@
     {
       "id": 6,
       "nombre": "P4Tool (Auto Hack 11.00 PS4)",
-      "categorias": [
-        "serviciosplaystation"
-      ],
+      "categoria": "pirateria_ps4",
       "imagen": "imagenes/p4tool.jpg",
       "opciones": [
         {
