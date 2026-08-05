@@ -248,6 +248,36 @@
           "precio": 40
         }
       ]
+    },
+    {
+      "id": 12,
+      "nombre": "Inyección de Juegos Digitales Xbox One & Series X|S (GamePass)",
+      "categorias": [
+        "serviciosxbox"
+      ],
+      "imagen": "./imagenes/1785864460461_p4h_product_cover.webp",
+      "opciones": [
+        {
+          "nombre": "CONSOLA SIN EXTERNO",
+          "precio": 12
+        },
+        {
+          "nombre": "CONSOLA + DISCO DE 1 TERA",
+          "precio": 22
+        },
+        {
+          "nombre": " CONSOLA + DISCO DE 2 TERA",
+          "precio": 32
+        },
+        {
+          "nombre": " CONSOLA + DISCO DE 4 TERA",
+          "precio": 42
+        },
+        {
+          "nombre": " CONSOLA + DISCO DE 5 TERA",
+          "precio": 52
+        }
+      ]
     }
   ]
 }
