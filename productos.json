@@ -313,6 +313,14 @@
         {
           "nombre": "Xbox One Inyección Permanente",
           "precio": 30
+        },
+        {
+          "nombre": "Xbox Series Inyección Perdible",
+          "precio": 15
+        },
+        {
+          "nombre": "Xbox Series Inyección Permanente",
+          "precio": 30
         }
       ]
     }
