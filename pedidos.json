@@ -1,5 +1,24 @@
 [
   {
+    "id": "PED-1785848842019",
+    "fecha": "2026-08-04T13:07:22.019Z",
+    "cliente": "Jose Gonzalez",
+    "telefono": "54698785",
+    "entrega": "Tienda / Digital",
+    "direccion": "",
+    "metodoPago": "USD - Efectivo",
+    "totalUSD": 12,
+    "estado": "pendiente",
+    "items": [
+      {
+        "idCart": 1785848829765.2832,
+        "nombre": "EA SPORTS FC 26",
+        "modalidad": "PS5 Inyección Perdible",
+        "precio": 12
+      }
+    ]
+  },
+  {
     "id": "PED-1785847694843",
     "fecha": "2026-08-04T12:48:14.843Z",
     "cliente": "Pedro",
