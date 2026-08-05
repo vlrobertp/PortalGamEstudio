@@ -61,6 +61,7 @@ function cargarConfiguracion() {
 // --- MÓDULO DE PEDIDOS Y ESTADÍSTICAS ---
 
 async function cargarPedidos() {
+  // Se agrega timestamp ?t= para saltar la caché de CDN y obtener siempre el último pedidos.json
   const url = `https://api.github.com/repos/${ghConfig.user}/${ghConfig.repo}/contents/pedidos.json?t=${Date.now()}`;
   
   try {
