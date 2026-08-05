@@ -106,11 +106,11 @@
           "precio": 20
         },
         {
-          "nombre": "Xbox One&Series Inyección Perdible",
+          "nombre": "Xbox One Inyección Perdible",
           "precio": 6
         },
         {
-          "nombre": "Xbox One&Series Inyección Permanente",
+          "nombre": "Xbox One Inyección Permanente",
           "precio": 12
         },
         {
@@ -128,6 +128,14 @@
         {
           "nombre": "PS4 Inyección Permanente",
           "precio": 10
+        },
+        {
+          "nombre": "Xbox Series Inyección Perdible",
+          "precio": 6
+        },
+        {
+          "nombre": "Xbox Series Inyección Permanente",
+          "precio": 12
         }
       ]
     },
