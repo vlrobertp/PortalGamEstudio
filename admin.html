@@ -231,7 +231,11 @@
 
     <!-- HISTORIAL DE PEDIDOS -->
     <div class="card">
-      <h2>📋 Historial de Pedidos</h2>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h2>📋 Historial de Pedidos</h2>
+        <button onclick="cargarPedidos()" style="width:auto; padding:8px 15px; background:var(--accent);">🔄 Actualizar Pedidos</button>
+      </div>
+
       <div class="grid-2" style="margin-bottom: 15px;">
         <input type="text" id="order-search-input" placeholder="🔍 Buscar por cliente o ID..." onkeyup="filtrarPedidos()">
         <select id="order-filter-status" onchange="filtrarPedidos()">
