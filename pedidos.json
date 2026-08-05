@@ -8,7 +8,7 @@
     "direccion": "",
     "metodoPago": "USD - Efectivo",
     "totalUSD": 12,
-    "estado": "pendiente",
+    "estado": "pagado",
     "items": [
       {
         "idCart": 1785848829765.2832,
