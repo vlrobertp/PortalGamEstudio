@@ -9,7 +9,12 @@ let categoriasAdmin = [
   { id: "servicios", nombre: "Servicios Técnicos" }
 ];
 
-let ghConfig = { user: '', repo: '', token: '' };
+let ghConfig = { 
+  user: 'vlrobertp', 
+  repo: 'PortalGamEstudio', 
+  token: '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' 
+};
+
 let pedidosAdmin = [];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -32,7 +37,7 @@ function guardarConfiguracion() {
   
   const statusEl = document.getElementById('config-status');
   if (statusEl) {
-    statusEl.innerText = "✅ Configuración guardada correctamente en el navegador";
+    statusEl.innerText = "✅ Configuración guardada correctamente";
     statusEl.style.color = "#00ff88";
   }
   showToast("Configuración guardada correctamente.");
@@ -42,52 +47,94 @@ function cargarConfiguracion() {
   const saved = localStorage.getItem('portal_gh_config');
   if (saved) {
     ghConfig = JSON.parse(saved);
-    if (ghConfig.user && ghConfig.user.startsWith('@')) {
-      ghConfig.user = ghConfig.user.substring(1);
-    }
-    const userEl = document.getElementById('gh-user');
-    const repoEl = document.getElementById('gh-repo');
-    const tokenEl = document.getElementById('gh-token');
-
-    if (userEl) userEl.value = ghConfig.user || '';
-    if (repoEl) repoEl.value = ghConfig.repo || '';
-    if (tokenEl) tokenEl.value = ghConfig.token || '';
   }
+  
+  const userEl = document.getElementById('gh-user');
+  const repoEl = document.getElementById('gh-repo');
+  const tokenEl = document.getElementById('gh-token');
+
+  if (userEl) userEl.value = ghConfig.user;
+  if (repoEl) repoEl.value = ghConfig.repo;
+  if (tokenEl) tokenEl.value = ghConfig.token;
 }
 
 // --- MÓDULO DE PEDIDOS Y ESTADÍSTICAS ---
 
-function cargarPedidos() {
-  pedidosAdmin = JSON.parse(localStorage.getItem('portal_pedidos') || '[]');
+async function cargarPedidos() {
+  const url = `https://api.github.com/repos/${ghConfig.user}/${ghConfig.repo}/contents/pedidos.json?t=${Date.now()}`;
   
-  fetch('pedidos.json')
-    .then(res => {
-      if (!res.ok) throw new Error("pedidos.json no existe aún en GitHub");
-      return res.json();
-    })
-    .then(data => {
-      if (Array.isArray(data)) {
-        const idsExistentes = new Set(pedidosAdmin.map(p => p.id));
-        data.forEach(p => {
-          if (!idsExistentes.has(p.id)) {
-            pedidosAdmin.push(p);
-          }
-        });
-        pedidosAdmin.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${ghConfig.token}`,
+        'Accept': 'application/vnd.github.v3+json'
       }
-      renderPedidosTable(pedidosAdmin);
-      calcularEstadisticas();
-    })
-    .catch(() => {
-      renderPedidosTable(pedidosAdmin);
-      calcularEstadisticas();
     });
+
+    if (res.ok) {
+      const data = await res.json();
+      const content = decodeURIComponent(escape(atob(data.content)));
+      pedidosAdmin = JSON.parse(content);
+      pedidosAdmin.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+      
+      localStorage.setItem('portal_pedidos', JSON.stringify(pedidosAdmin));
+      renderPedidosTable(pedidosAdmin);
+      calcularEstadisticas();
+      showToast("Pedidos sincronizados desde GitHub.");
+    } else {
+      throw new Error("No se pudo obtener el historial remoto");
+    }
+  } catch (e) {
+    pedidosAdmin = JSON.parse(localStorage.getItem('portal_pedidos') || '[]');
+    renderPedidosTable(pedidosAdmin);
+    calcularEstadisticas();
+  }
+}
+
+async function sincronizarPedidosAGitHub() {
+  const path = "pedidos.json";
+  const url = `https://api.github.com/repos/${ghConfig.user}/${ghConfig.repo}/contents/${path}`;
+
+  try {
+    const getRes = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${ghConfig.token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    let sha = null;
+    if (getRes.ok) {
+      const getData = await getRes.json();
+      sha = getData.sha;
+    }
+
+    const jsonString = JSON.stringify(pedidosAdmin, null, 2);
+    const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
+
+    await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${ghConfig.token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.github.v3+json'
+      },
+      body: JSON.stringify({
+        message: "Actualización de pedidos desde Panel Admin",
+        content: base64Content,
+        sha: sha || undefined
+      })
+    });
+  } catch (e) {
+    console.error("Error al sincronizar estado del pedido con GitHub:", e);
+  }
 }
 
 function guardarPedidosLocal() {
   localStorage.setItem('portal_pedidos', JSON.stringify(pedidosAdmin));
   renderPedidosTable(pedidosAdmin);
   calcularEstadisticas();
+  sincronizarPedidosAGitHub();
 }
 
 function renderPedidosTable(lista = pedidosAdmin) {
@@ -317,11 +364,6 @@ function addOpcionRow(nombre = '', precio = '') {
 async function guardarProducto() {
   if (ghConfig.user.startsWith('@')) {
     ghConfig.user = ghConfig.user.substring(1);
-  }
-
-  if (!ghConfig.token || !ghConfig.user || !ghConfig.repo) {
-    alert("Por favor, completa y guarda primero los datos de configuración de GitHub.");
-    return;
   }
 
   const idEdit = document.getElementById('prod-id').value;
