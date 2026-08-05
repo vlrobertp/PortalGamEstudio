@@ -3,12 +3,8 @@ const TELEFONO_WHATSAPP = "5352890559";
 const TARJETA_PAGO = "9205 9598 7962 9732"; 
 const TASA_CAMBIO_DEFAULT = 675; // TASA DE CAMBIO INTERNA (CUP x 1 USD)
 
-// CONFIGURACIÓN DE GITHUB API PARA MÓVILES Y CLIENTES EXTERNOS
-const GH_CONFIG_CLIENTE = {
-  user: "vlrobertp",
-  repo: "PortalGamEstudio",
-  token: "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"
-};
+// ENDPOINT DEL BACKEND EN GOOGLE APPS SCRIPT (Móviles / Clientes)
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzh7LReLayQ1YbUFbsXSV0KhBy9meDGfJ0sEzq1dkbrpRuU9ag2eMNWr9vqdVjUPirq/exec";
 
 let productos = [];
 let categorias = [];
@@ -292,50 +288,21 @@ function filterProducts() {
   renderProducts(filtrados);
 }
 
-// SINCRONIZACIÓN REMOTA CON GITHUB API DESDE CUALQUIER NAVEGADOR / MÓVIL
-async function guardarPedidoEnGitHub(nuevoPedido) {
-  const path = "pedidos.json";
-  const url = `https://api.github.com/repos/${GH_CONFIG_CLIENTE.user}/${GH_CONFIG_CLIENTE.repo}/contents/${path}`;
-
-  let sha = null;
-  let pedidosExistentes = [];
-
+// ENVÍO DE PEDIDO AL SERVERLESS BACKEND (GOOGLE APPS SCRIPT)
+async function guardarPedidoEnServidor(nuevoPedido) {
   try {
-    const getRes = await fetch(url, {
+    await fetch(WEBHOOK_URL, {
+      method: "POST",
+      mode: "no-cors", // Evita cualquier bloqueo CORS en dispositivos móviles
       headers: {
-        'Authorization': `Bearer ${GH_CONFIG_CLIENTE.token}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(nuevoPedido)
     });
-
-    if (getRes.ok) {
-      const getData = await getRes.json();
-      sha = getData.sha;
-      const content = decodeURIComponent(escape(atob(getData.content)));
-      pedidosExistentes = JSON.parse(content);
-    }
-  } catch (e) {
-    console.warn("Creando primer archivo pedidos.json...");
+    console.log("Pedido enviado exitosamente al servidor.");
+  } catch (error) {
+    console.error("Error al registrar pedido en el servidor:", error);
   }
-
-  pedidosExistentes.unshift(nuevoPedido);
-
-  const jsonString = JSON.stringify(pedidosExistentes, null, 2);
-  const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
-
-  await fetch(url, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${GH_CONFIG_CLIENTE.token}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.github.v3+json'
-    },
-    body: JSON.stringify({
-      message: `Nuevo pedido de ${nuevoPedido.cliente} (${nuevoPedido.id})`,
-      content: base64Content,
-      sha: sha || undefined
-    })
-  });
 }
 
 async function sendWhatsAppOrder() {
@@ -403,12 +370,8 @@ async function sendWhatsAppOrder() {
     items: [...carrito]
   };
 
-  // Guardar en GitHub desde el dispositivo del cliente
-  try {
-    await guardarPedidoEnGitHub(nuevoPedido);
-  } catch (e) {
-    console.warn("No se pudo registrar en el servidor de GitHub:", e);
-  }
+  // Guardar a través del Webhook de Google Apps Script (Servidor backend)
+  await guardarPedidoEnServidor(nuevoPedido);
 
   carrito = [];
   guardarCarrito();
