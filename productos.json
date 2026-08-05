@@ -278,6 +278,43 @@
           "precio": 52
         }
       ]
+    },
+    {
+      "id": 13,
+      "nombre": "Call of Duty: Black Ops 2 Remastered",
+      "categorias": [
+        "ps5inyeccion",
+        "ps4inyeccion",
+        "xboxone",
+        "xboxseries"
+      ],
+      "imagen": "./imagenes/1785959215584_9w2_product_cover.webp",
+      "opciones": [
+        {
+          "nombre": "PS5 Inyección Perdible",
+          "precio": 20
+        },
+        {
+          "nombre": "PS5 Inyección Permanente",
+          "precio": 35
+        },
+        {
+          "nombre": "PS4 Inyección Perdible",
+          "precio": 5
+        },
+        {
+          "nombre": "PS4 Inyección Permanente",
+          "precio": 10
+        },
+        {
+          "nombre": "Xbox One Inyección Perdible",
+          "precio": 15
+        },
+        {
+          "nombre": "Xbox One Inyección Permanente",
+          "precio": 30
+        }
+      ]
     }
   ]
 }
