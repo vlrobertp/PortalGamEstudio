@@ -3,6 +3,13 @@ const TELEFONO_WHATSAPP = "5352890559";
 const TARJETA_PAGO = "9205 9598 7962 9732"; 
 const TASA_CAMBIO_DEFAULT = 675; // TASA DE CAMBIO INTERNA (CUP x 1 USD)
 
+// CONFIGURACIÓN DE GITHUB API PARA MÓVILES Y CLIENTES EXTERNOS
+const GH_CONFIG_CLIENTE = {
+  user: "vlrobertp",
+  repo: "PortalGamEstudio",
+  token: "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"
+};
+
 let productos = [];
 let categorias = [];
 let carrito = [];
@@ -285,29 +292,10 @@ function filterProducts() {
   renderProducts(filtrados);
 }
 
-async function guardarPedidoEnHistorialLocal(nuevoPedido) {
-  // 1. Guardar localmente siempre
-  let pedidos = JSON.parse(localStorage.getItem('portal_pedidos') || '[]');
-  pedidos.unshift(nuevoPedido);
-  localStorage.setItem('portal_pedidos', JSON.stringify(pedidos));
-
-  // 2. Intentar actualizar pedidos.json en GitHub si existen credenciales guardadas
-  const savedConfig = localStorage.getItem('portal_gh_config');
-  if (savedConfig) {
-    try {
-      const ghConfig = JSON.parse(savedConfig);
-      if (ghConfig.token && ghConfig.repo) {
-        await guardarPedidoEnGitHub(nuevoPedido, ghConfig);
-      }
-    } catch (e) {
-      console.warn("No se pudo sincronizar el pedido con GitHub API:", e);
-    }
-  }
-}
-
-async function guardarPedidoEnGitHub(nuevoPedido, config) {
+// SINCRONIZACIÓN REMOTA CON GITHUB API DESDE CUALQUIER NAVEGADOR / MÓVIL
+async function guardarPedidoEnGitHub(nuevoPedido) {
   const path = "pedidos.json";
-  const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${path}`;
+  const url = `https://api.github.com/repos/${GH_CONFIG_CLIENTE.user}/${GH_CONFIG_CLIENTE.repo}/contents/${path}`;
 
   let sha = null;
   let pedidosExistentes = [];
@@ -315,7 +303,7 @@ async function guardarPedidoEnGitHub(nuevoPedido, config) {
   try {
     const getRes = await fetch(url, {
       headers: {
-        'Authorization': `Bearer ${config.token}`,
+        'Authorization': `Bearer ${GH_CONFIG_CLIENTE.token}`,
         'Accept': 'application/vnd.github.v3+json'
       }
     });
@@ -326,7 +314,9 @@ async function guardarPedidoEnGitHub(nuevoPedido, config) {
       const content = decodeURIComponent(escape(atob(getData.content)));
       pedidosExistentes = JSON.parse(content);
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn("Creando primer archivo pedidos.json...");
+  }
 
   pedidosExistentes.unshift(nuevoPedido);
 
@@ -336,7 +326,7 @@ async function guardarPedidoEnGitHub(nuevoPedido, config) {
   await fetch(url, {
     method: 'PUT',
     headers: {
-      'Authorization': `Bearer ${config.token}`,
+      'Authorization': `Bearer ${GH_CONFIG_CLIENTE.token}`,
       'Content-Type': 'application/json',
       'Accept': 'application/vnd.github.v3+json'
     },
@@ -348,7 +338,7 @@ async function guardarPedidoEnGitHub(nuevoPedido, config) {
   });
 }
 
-function sendWhatsAppOrder() {
+async function sendWhatsAppOrder() {
   const nombre = document.getElementById('client-name').value;
   const telefono = document.getElementById('client-phone').value;
   const deliveryType = document.getElementById('delivery-type').value;
@@ -360,6 +350,12 @@ function sendWhatsAppOrder() {
   
   if (deliveryType === 'Domicilio' && !direccion.trim()) {
     return alert("Por favor, ingresa la dirección para la entrega a domicilio.");
+  }
+
+  const btnSend = document.getElementById('btn-send-order');
+  if (btnSend) {
+    btnSend.disabled = true;
+    btnSend.innerText = "⏳ Guardando pedido...";
   }
 
   let mensaje = `🎮 *NUEVO PEDIDO - PORTAL GAMESTUDIO*\n\n`;
@@ -407,12 +403,22 @@ function sendWhatsAppOrder() {
     items: [...carrito]
   };
 
-  guardarPedidoEnHistorialLocal(nuevoPedido);
+  // Guardar en GitHub desde el dispositivo del cliente
+  try {
+    await guardarPedidoEnGitHub(nuevoPedido);
+  } catch (e) {
+    console.warn("No se pudo registrar en el servidor de GitHub:", e);
+  }
 
   carrito = [];
   guardarCarrito();
   updateCartUI();
   toggleCart();
+
+  if (btnSend) {
+    btnSend.disabled = false;
+    btnSend.innerText = "📲 Enviar Pedido por WhatsApp";
+  }
 
   const url = `https://wa.me/${TELEFONO_WHATSAPP}?text=${encodeURIComponent(mensaje)}`;
   window.open(url, '_blank');
