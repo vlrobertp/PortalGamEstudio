@@ -473,6 +473,38 @@
           "precio": 20
         }
       ]
+    },
+    {
+      "id": 17,
+      "nombre": "Alan Wake Remastered",
+      "categorias": [
+        "pirateria_ps4",
+        "ps5inyeccion",
+        "ps4inyeccion"
+      ],
+      "imagen": "./imagenes/1786236644969_oz8_product_cover.webp",
+      "opciones": [
+        {
+          "nombre": "PS5 Inyección Perdible",
+          "precio": 10
+        },
+        {
+          "nombre": "PS5 Inyección Permanente",
+          "precio": 25
+        },
+        {
+          "nombre": "PS4 Inyección Perdible",
+          "precio": 5
+        },
+        {
+          "nombre": "PS4 Inyección Permanente",
+          "precio": 10
+        },
+        {
+          "nombre": "Piratería PS4",
+          "precio": 1
+        }
+      ]
     }
   ]
 }
