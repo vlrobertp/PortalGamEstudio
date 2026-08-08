@@ -542,6 +542,33 @@
           "precio": 0
         }
       ]
+    },
+    {
+      "id": 19,
+      "nombre": "Assassin's Creed Black Flag Resynced",
+      "categorias": [
+        "ps5inyeccion",
+        "xboxseries"
+      ],
+      "imagen": "./imagenes/1786237159019_p4l_product_cover.webp",
+      "opciones": [
+        {
+          "nombre": "PS5 Inyección",
+          "precio": 25
+        },
+        {
+          "nombre": "PS5 Inyección",
+          "precio": 45
+        },
+        {
+          "nombre": "Xbox Series Inyección",
+          "precio": 10
+        },
+        {
+          "nombre": "Xbox Series Inyección",
+          "precio": 45
+        }
+      ]
     }
   ]
 }
