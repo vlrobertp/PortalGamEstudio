@@ -331,6 +331,61 @@
           "precio": 30
         }
       ]
+    },
+    {
+      "id": 14,
+      "nombre": "A plague Tale Innocence",
+      "categorias": [
+        "pirateria_ps5",
+        "pirateria_ps4",
+        "ps5inyeccion",
+        "ps4inyeccion",
+        "xboxone",
+        "xboxseries"
+      ],
+      "imagen": "./imagenes/1786235929014_3vf_product_cover__1_.webp",
+      "opciones": [
+        {
+          "nombre": "PS4 Inyección Perdible",
+          "precio": 5
+        },
+        {
+          "nombre": "PS4 Inyección Permanente",
+          "precio": 10
+        },
+        {
+          "nombre": "PS5 Inyección Perdible",
+          "precio": 8
+        },
+        {
+          "nombre": "PS5 Inyección Permanente ",
+          "precio": 20
+        },
+        {
+          "nombre": "Xbox One Inyección Perdible",
+          "precio": 8
+        },
+        {
+          "nombre": "Xbox One Inyección Permanente",
+          "precio": 20
+        },
+        {
+          "nombre": "Xbox Series Inyección Perdible",
+          "precio": 8
+        },
+        {
+          "nombre": "Xbox Series Inyección Permanente",
+          "precio": 20
+        },
+        {
+          "nombre": "Piratería PS5",
+          "precio": 3
+        },
+        {
+          "nombre": "Piratería PS4",
+          "precio": 1
+        }
+      ]
     }
   ]
 }
