@@ -386,6 +386,43 @@
           "precio": 1
         }
       ]
+    },
+    {
+      "id": 15,
+      "nombre": "A Way Out",
+      "categorias": [
+        "pirateria_ps4",
+        "ps5inyeccion",
+        "ps4inyeccion",
+        "xboxgamepass"
+      ],
+      "imagen": "./imagenes/1786236146328_ut0_product_cover.webp",
+      "opciones": [
+        {
+          "nombre": "PS5 Inyección Perdible",
+          "precio": 8
+        },
+        {
+          "nombre": "PS5 Inyección Permanente",
+          "precio": 20
+        },
+        {
+          "nombre": "PS4 Inyección Perdible",
+          "precio": 5
+        },
+        {
+          "nombre": "PS4 Inyección Permanente",
+          "precio": 10
+        },
+        {
+          "nombre": "XBOX GamePass",
+          "precio": 0
+        },
+        {
+          "nombre": "Piratería PS4",
+          "precio": 1
+        }
+      ]
     }
   ]
 }
