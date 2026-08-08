@@ -505,6 +505,43 @@
           "precio": 1
         }
       ]
+    },
+    {
+      "id": 18,
+      "nombre": "ARK: Survival Evolved",
+      "categorias": [
+        "pirateria_ps4",
+        "ps5inyeccion",
+        "ps4inyeccion",
+        "xboxgamepass"
+      ],
+      "imagen": "./imagenes/1786236929795_qhc_product_cover__1_.webp",
+      "opciones": [
+        {
+          "nombre": "PS5 Inyección Perdible",
+          "precio": 10
+        },
+        {
+          "nombre": "PS5 Inyección Permanente",
+          "precio": 20
+        },
+        {
+          "nombre": "PS4 Inyección Perdible",
+          "precio": 5
+        },
+        {
+          "nombre": "PS4 Inyección Permanente",
+          "precio": 10
+        },
+        {
+          "nombre": "Piratería PS4",
+          "precio": 1
+        },
+        {
+          "nombre": "XBOX GamePass",
+          "precio": 0
+        }
+      ]
     }
   ]
 }
