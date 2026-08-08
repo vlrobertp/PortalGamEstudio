@@ -423,6 +423,56 @@
           "precio": 1
         }
       ]
+    },
+    {
+      "id": 16,
+      "nombre": "Ace Combat 7: Skies Unknown",
+      "categorias": [
+        "pirateria_ps4",
+        "ps5inyeccion",
+        "ps4inyeccion",
+        "xboxone",
+        "xboxseries"
+      ],
+      "imagen": "./imagenes/1786236373328_unb_product_cover.webp",
+      "opciones": [
+        {
+          "nombre": "PS5 Inyección Perdible",
+          "precio": 8
+        },
+        {
+          "nombre": "PS5 Inyección Permanente",
+          "precio": 20
+        },
+        {
+          "nombre": "PS4 Inyección Perdible",
+          "precio": 5
+        },
+        {
+          "nombre": "PS4 Inyección Permanente",
+          "precio": 10
+        },
+        {
+          "nombre": "Piratería PS4",
+          "precio": 1
+        },
+        {
+          "nombre": "Xbox One Inyección Perdible",
+          "precio": 6
+        },
+        {
+          "nombre": "Xbox One Permanente",
+          "precio": 20
+        },
+        {
+          "nombre": "Xbox Series Inyección Perdible",
+          "precio": 6
+        },
+        {
+          "nombre": "Xbox Series Permanente",
+          "precio": 20
+        }
+      ]
     }
   ]
 }
