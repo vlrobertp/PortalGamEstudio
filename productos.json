@@ -569,6 +569,28 @@
           "precio": 45
         }
       ]
+    },
+    {
+      "id": 20,
+      "nombre": "Playstation Plus Essential",
+      "categorias": [
+        "serviciosplaystation"
+      ],
+      "imagen": "./imagenes/1786237857515_plyastation_plus_essential.jpg.webp",
+      "opciones": [
+        {
+          "nombre": "PS4&PS5 1 MES",
+          "precio": 18
+        },
+        {
+          "nombre": "PS4&PS5 3 MESES",
+          "precio": 35
+        },
+        {
+          "nombre": "PS4&PS5 12 MESES",
+          "precio": 90
+        }
+      ]
     }
   ]
 }
