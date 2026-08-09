@@ -620,18 +620,18 @@
       "categorias": [
         "serviciosplaystation"
       ],
-      "imagen": "./imagenes/1786239550272_3f0a1474_9aa0_4178_8d75_70256bb84043.jpg",
+      "imagen": "./imagenes/1786239606090_3f0a1474_9aa0_4178_8d75_70256bb84043.jpg",
       "opciones": [
         {
           "nombre": "PS4&PS5 1 MES",
           "precio": 30
         },
         {
-          "nombre": "PS4&PS5 1 MESES",
+          "nombre": "PS4&PS5 3 MESES",
           "precio": 70
         },
         {
-          "nombre": "PS4&PS5 1 MESES",
+          "nombre": "PS4&PS5 12 MESES",
           "precio": 190
         }
       ]
