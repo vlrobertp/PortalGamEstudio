@@ -591,6 +591,28 @@
           "precio": 90
         }
       ]
+    },
+    {
+      "id": 21,
+      "nombre": "Playstation Plus Extra",
+      "categorias": [
+        "serviciosplaystation"
+      ],
+      "imagen": "./imagenes/1786237958696_playstation_plus_extra_ps4_ps5_e2be05da6f981c296517701338897093_1024_1024.webp",
+      "opciones": [
+        {
+          "nombre": "PS4&PS5 1 MES",
+          "precio": 25
+        },
+        {
+          "nombre": "PS4&PS5 1 MESES",
+          "precio": 55
+        },
+        {
+          "nombre": "PS4&PS5 1 MESES",
+          "precio": 150
+        }
+      ]
     }
   ]
 }
